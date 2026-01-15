@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum CourseStatus {
+  DRAFT
+  PLANNED
+  OPENED
+  ARCHIVED
+}
+
+model Course {
+  id               Int          @id @default(autoincrement())
+  name             String
+  price            Decimal
+  date             DateTime?
+  description      Json?
+  status           CourseStatus @default(DRAFT)
+  registrationOpen Boolean      @default(true)
+
+  certificateTemplate CertificateTemplate? @relation(fields: [certificateTemplateId], references: [id], onDelete: SetNull)
+  certificateTemplateId Int?
+
+  registrations       Registration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("courses")
+}
+
+model Registration {
+  id       Int @id @default(autoincrement())
+
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentId     String?
+  liqpayOrderId String?
+  amount        Decimal?
+
+  certificateEnabled Boolean @default(false)
+  
+  course   Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId Int
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, userId])
+  @@index([courseId])
+  @@index([userId])
+  @@map("registrations")
+}
+
+model CertificateTemplate {
+  id          Int    @id @default(autoincrement())
+  name        String
+  templateUrl String 
+
+  namePosition              Json
+  courseNamePosition        Json
+  courseDatePosition        Json
+  certificateNumberPosition Json
+
+  isGlobal Boolean @default(false)
+
+  courses Course[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("certificate_templates")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  // sessions      Session[]
+  // accounts      Account[]
+  registration      Registration[]
+
+  phone             String?
+  region_city       String?
+  education         String?
+  specialty         String?
+  workplace         String?
+  jobTitle          String?
+  certificateRulesAccepted Boolean? @default(false)
+  personalDataConsent      Boolean? @default(false)
+
+  role       String?
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
+  @@unique([email])
+  @@map("user")
+}
