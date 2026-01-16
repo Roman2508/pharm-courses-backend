@@ -1,6 +1,7 @@
+
 generator client {
-  provider = "prisma-client"
-  output   = "./generated"
+  provider   = "prisma-client"
+  output     = "./generated"  
 }
 
 datasource db {
@@ -17,7 +18,6 @@ enum PaymentStatus {
 enum CourseStatus {
   DRAFT
   PLANNED
-  OPENED
   ARCHIVED
 }
 
@@ -25,15 +25,16 @@ model Course {
   id               Int          @id @default(autoincrement())
   name             String
   price            Decimal
-  date             DateTime?
+  startDate        DateTime?
+  endDate          DateTime?
   description      Json?
   status           CourseStatus @default(DRAFT)
   registrationOpen Boolean      @default(true)
 
-  certificateTemplate CertificateTemplate? @relation(fields: [certificateTemplateId], references: [id], onDelete: SetNull)
+  certificateTemplate   CertificateTemplate? @relation(fields: [certificateTemplateId], references: [id], onDelete: SetNull)
   certificateTemplateId Int?
 
-  registrations       Registration[]
+  registrations Registration[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,7 +43,7 @@ model Course {
 }
 
 model Registration {
-  id       Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   paymentStatus PaymentStatus @default(PENDING)
   paymentId     String?
@@ -50,11 +51,10 @@ model Registration {
   amount        Decimal?
 
   certificateEnabled Boolean @default(false)
-  
-  course   Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  courseId Int
+  course             Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId           Int
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
   createdAt DateTime @default(now())
@@ -67,10 +67,9 @@ model Registration {
 }
 
 model CertificateTemplate {
-  id          Int    @id @default(autoincrement())
-  name        String
-  templateUrl String 
-
+  id                        Int    @id @default(autoincrement())
+  name                      String
+  templateUrl               String
   namePosition              Json
   courseNamePosition        Json
   courseDatePosition        Json
@@ -87,23 +86,23 @@ model CertificateTemplate {
 }
 
 model User {
-  id            String    @id
+  id            String         @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean        @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  // sessions      Session[]
-  // accounts      Account[]
-  registration      Registration[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  registration  Registration[]
 
-  phone             String?
-  region_city       String?
-  education         String?
-  specialty         String?
-  workplace         String?
-  jobTitle          String?
+  phone                    String?
+  region_city              String?
+  education                String?
+  specialty                String?
+  workplace                String?
+  jobTitle                 String?
   certificateRulesAccepted Boolean? @default(false)
   personalDataConsent      Boolean? @default(false)
 
@@ -114,4 +113,53 @@ model User {
 
   @@unique([email])
   @@map("user")
+}
+
+model Session {
+  id             String   @id
+  expiresAt      DateTime
+  token          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy String?
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }

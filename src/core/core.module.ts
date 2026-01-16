@@ -3,9 +3,19 @@ import { ConfigModule } from '@nestjs/config';
 
 import { CoreService } from './core.service';
 import { CoreController } from './core.controller';
+import { PrismaModule } from './prisma/prisma.module';
+import { CourseModule } from 'src/modules/course/course.module';
+import { RegistrationModule } from 'src/modules/registration/registration.module';
+import { CertificateTemplateModule } from 'src/modules/certificate-template/certificate-template.module';
 
 @Module({
-  imports: [ConfigModule.forRoot()],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    CourseModule,
+    RegistrationModule,
+    CertificateTemplateModule,
+  ],
   controllers: [CoreController],
   providers: [CoreService],
 })
