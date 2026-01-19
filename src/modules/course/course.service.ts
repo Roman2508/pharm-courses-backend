@@ -9,8 +9,6 @@ export class CourseService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(dto: CreateCourseDto) {
-    console.log(dto);
-    // @ts-ignore
     return this.prisma.course.create({ data: dto });
   }
 
@@ -30,11 +28,11 @@ export class CourseService {
   }
 
   update(id: number, dto: UpdateCourseDto) {
-    // @ts-ignore
     return this.prisma.course.update({ where: { id }, data: dto });
   }
 
-  remove(id: number) {
-    return this.prisma.course.delete({ where: { id } });
+  async remove(id: number) {
+    await this.prisma.course.delete({ where: { id } });
+    return id;
   }
 }

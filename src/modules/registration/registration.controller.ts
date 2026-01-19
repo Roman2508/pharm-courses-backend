@@ -1,15 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Controller,
+} from '@nestjs/common';
+
 import { RegistrationService } from './registration.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
-import { UpdateRegistrationDto } from './dto/update-registration.dto';
+import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
+import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
 
 @Controller('registration')
 export class RegistrationController {
   constructor(private readonly registrationService: RegistrationService) {}
 
   @Post()
-  create(@Body() createRegistrationDto: CreateRegistrationDto) {
-    return this.registrationService.create(createRegistrationDto);
+  create(@Body() dto: CreateRegistrationDto) {
+    return this.registrationService.create(dto);
   }
 
   @Get()
@@ -17,14 +27,19 @@ export class RegistrationController {
     return this.registrationService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.registrationService.findOne(+id);
+  @Get(':userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.registrationService.findByUserId(userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRegistrationDto: UpdateRegistrationDto) {
-    return this.registrationService.update(+id, updateRegistrationDto);
+  updateEnabled(@Param('id') id: string, @Body() dto: ChangeEnableCertificateDto) {
+    return this.registrationService.updateEnabled(+id, dto);
+  }
+
+  @Patch('/payment/:id')
+  updatePayment(@Param('id') id: string, @Body() dto: UpdateRegistrationPaymentDto) {
+    return this.registrationService.updatePayment(+id, dto);
   }
 
   @Delete(':id')

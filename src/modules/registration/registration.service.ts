@@ -1,26 +1,52 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+
+import { PrismaService } from 'src/core/prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
-import { UpdateRegistrationDto } from './dto/update-registration.dto';
+import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
+import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
 
 @Injectable()
 export class RegistrationService {
-  create(createRegistrationDto: CreateRegistrationDto) {
-    return 'This action adds a new registration';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(dto: CreateRegistrationDto) {
+    const existingRegistration = await this.prisma.registration.findUnique({
+      where: {
+        courseId_userId: { userId: dto.userId, courseId: dto.courseId },
+      },
+    });
+
+    if (existingRegistration) {
+      throw new BadRequestException('Ви вже зареєстровані на цей курс');
+    }
+
+    return this.prisma.registration.create({ data: dto });
   }
 
   findAll() {
-    return `This action returns all registration`;
+    return this.prisma.registration.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} registration`;
+  findByUserId(userId: string) {
+    return this.prisma.registration.findMany({ where: { userId } });
   }
 
-  update(id: number, updateRegistrationDto: UpdateRegistrationDto) {
-    return `This action updates a #${id} registration`;
+  updateEnabled(id: number, dto: ChangeEnableCertificateDto) {
+    return this.prisma.registration.update({
+      where: { id },
+      data: dto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} registration`;
+  updatePayment(id: number, dto: UpdateRegistrationPaymentDto) {
+    return this.prisma.registration.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async remove(id: number) {
+    await this.prisma.registration.delete({ where: { id } });
+    return id;
   }
 }

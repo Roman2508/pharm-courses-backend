@@ -1,26 +1,31 @@
 import { Injectable } from '@nestjs/common';
+
+import { PrismaService } from 'src/core/prisma/prisma.service';
 import { CreateCertificateTemplateDto } from './dto/create-certificate-template.dto';
 import { UpdateCertificateTemplateDto } from './dto/update-certificate-template.dto';
 
 @Injectable()
 export class CertificateTemplateService {
-  create(createCertificateTemplateDto: CreateCertificateTemplateDto) {
-    return 'This action adds a new certificateTemplate';
+  constructor(private readonly prisma: PrismaService) {}
+
+  create(dto: CreateCertificateTemplateDto) {
+    return this.prisma.certificateTemplate.create({ data: dto });
   }
 
   findAll() {
-    return `This action returns all certificateTemplate`;
+    return this.prisma.certificateTemplate.findMany();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} certificateTemplate`;
+    return this.prisma.certificateTemplate.findUnique({ where: { id } });
   }
 
-  update(id: number, updateCertificateTemplateDto: UpdateCertificateTemplateDto) {
-    return `This action updates a #${id} certificateTemplate`;
+  update(id: number, dto: UpdateCertificateTemplateDto) {
+    return this.prisma.certificateTemplate.update({ where: { id }, data: dto });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} certificateTemplate`;
+  async remove(id: number) {
+    await this.prisma.certificateTemplate.delete({ where: { id } });
+    return id;
   }
 }

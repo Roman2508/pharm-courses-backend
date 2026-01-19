@@ -33,8 +33,7 @@ export class CreateCourseDto {
   endDate: Date;
 
   @ApiProperty()
-  @IsJSON()
-  description: JSON;
+  description: any;
 
   @ApiProperty()
   @IsEnum(CourseStatus)
