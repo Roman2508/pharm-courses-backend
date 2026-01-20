@@ -6,7 +6,7 @@ import { auth } from 'src/shared/lib/auth';
 
 @Controller('auth')
 export class AuthController {
-  @All('*path')
+  @All('*')
   async handleAuth(@Req() req: Request, @Res() res: Response) {
     return toNodeHandler(auth)(req, res);
   }
