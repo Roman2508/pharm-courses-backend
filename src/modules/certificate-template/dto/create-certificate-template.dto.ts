@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsJSON, IsString } from 'class-validator';
+import { IsJSON, IsString } from 'class-validator';
 import { InputJsonValue } from '@prisma/client/runtime/client';
 
 export class CreateCertificateTemplateDto {
@@ -28,6 +28,26 @@ export class CreateCertificateTemplateDto {
   certificateNumberPosition: InputJsonValue;
 
   @ApiProperty()
-  @IsBoolean()
-  isGlobal: boolean;
+  @IsJSON()
+  durationPosition: InputJsonValue;
+
+  @ApiProperty()
+  @IsJSON()
+  pointsPosition: InputJsonValue;
+
+  @ApiProperty()
+  @IsJSON()
+  yearOfInclusionPosition: InputJsonValue;
+
+  @ApiProperty()
+  @IsJSON()
+  numberOfInclusionPosition: InputJsonValue;
+
+  @ApiProperty()
+  @IsJSON()
+  eventTypePosition: InputJsonValue;
+
+  @ApiProperty()
+  @IsJSON()
+  certificateTypePosition: InputJsonValue;
 }

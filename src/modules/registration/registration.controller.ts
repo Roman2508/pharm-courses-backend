@@ -6,12 +6,14 @@ import {
   Param,
   Delete,
   Controller,
+  Query,
 } from '@nestjs/common';
 
 import { RegistrationService } from './registration.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
+import { RegistrationsQueryDto } from './dto/registrations-query.dto';
 
 @Controller('registration')
 export class RegistrationController {
@@ -23,22 +25,36 @@ export class RegistrationController {
   }
 
   @Get()
-  findAll() {
-    return this.registrationService.findAll();
+  findAll(@Query() query: RegistrationsQueryDto) {
+    return this.registrationService.findAll(query);
   }
 
-  @Get(':userId')
+  @Get('/user/:userId')
   findByUserId(@Param('userId') userId: string) {
     return this.registrationService.findByUserId(userId);
   }
 
+  @Get('/current/:userId/:courseId')
+  findCurrent(
+    @Param('userId') userId: string,
+    @Param('courseId') courseId: string,
+  ) {
+    return this.registrationService.findCurrent(userId, +courseId);
+  }
+
   @Patch(':id')
-  updateEnabled(@Param('id') id: string, @Body() dto: ChangeEnableCertificateDto) {
+  updateEnabled(
+    @Param('id') id: string,
+    @Body() dto: ChangeEnableCertificateDto,
+  ) {
     return this.registrationService.updateEnabled(+id, dto);
   }
 
   @Patch('/payment/:id')
-  updatePayment(@Param('id') id: string, @Body() dto: UpdateRegistrationPaymentDto) {
+  updatePayment(
+    @Param('id') id: string,
+    @Body() dto: UpdateRegistrationPaymentDto,
+  ) {
     return this.registrationService.updatePayment(+id, dto);
   }
 

@@ -12,9 +12,7 @@ import { PrismaClient } from '../../../prisma/generated/client';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: { rejectUnauthorized: false },
 });
 
 const adapter = new PrismaPg(pool);
@@ -25,8 +23,16 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:7777',
   basePath: '/auth',
   trustedOrigins: [...(process.env.TRUSTED_ORIGINS || '').split(',')],
-  emailAndPassword: {
-    enabled: true,
-  },
+  emailAndPassword: { enabled: true },
   plugins: [admin(), multiSession()],
+  user: {
+    additionalFields: {
+      phone: { type: 'string' },
+      region_city: { type: 'string' },
+      education: { type: 'string' },
+      specialty: { type: 'string' },
+      workplace: { type: 'string' },
+      jobTitle: { type: 'string' },
+    },
+  },
 });

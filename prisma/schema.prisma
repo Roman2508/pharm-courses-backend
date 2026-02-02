@@ -21,15 +21,33 @@ enum CourseStatus {
   ARCHIVED
 }
 
+enum CourseRegistrationStatus {
+  OPEN
+  CLOSE
+}
+
+enum CourseTargetAudience {
+  PHARMACISTS
+  LABORATORY_ASSISTANTS
+}
+
 model Course {
   id               Int          @id @default(autoincrement())
   name             String
-  price            Decimal
+  link             String?
+  price            Int
+  maxMembers       Int?
   startDate        DateTime?
   endDate          DateTime?
-  description      Json?
-  status           CourseStatus @default(DRAFT)
-  registrationOpen Boolean      @default(true)
+  description      String?
+  status           CourseStatus              @default(DRAFT)
+  registrationOpen CourseRegistrationStatus  @default(OPEN)
+  targetAudience   CourseTargetAudience      @default(PHARMACISTS)
+
+  duration               Int
+  pointsBpr              Int
+  yearOfInclusionToBpr   Int
+  numberOfInclusionToBpr Int
 
   certificateTemplate   CertificateTemplate? @relation(fields: [certificateTemplateId], references: [id], onDelete: SetNull)
   certificateTemplateId Int?
@@ -48,7 +66,7 @@ model Registration {
   paymentStatus PaymentStatus @default(PENDING)
   paymentId     String?
   liqpayOrderId String?
-  amount        Decimal?
+  amount        Int?
 
   certificateEnabled Boolean @default(false)
   course             Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -70,12 +88,17 @@ model CertificateTemplate {
   id                        Int    @id @default(autoincrement())
   name                      String
   templateUrl               String
+
   namePosition              Json
   courseNamePosition        Json
   courseDatePosition        Json
   certificateNumberPosition Json
-
-  isGlobal Boolean @default(false)
+  durationPosition          Json
+  pointsPosition            Json
+  yearOfInclusionPosition   Json
+  numberOfInclusionPosition Json
+  eventTypePosition         Json
+  certificateTypePosition   Json
 
   courses Course[]
 

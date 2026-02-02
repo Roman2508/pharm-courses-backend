@@ -13,7 +13,7 @@ export class CourseService {
   }
 
   findAll() {
-    return this.prisma.course.findMany();
+    return this.prisma.course.findMany({ orderBy: { createdAt: 'desc' } });
   }
 
   findByStatus(status: string) {
@@ -24,7 +24,10 @@ export class CourseService {
   }
 
   findOne(id: number) {
-    return this.prisma.course.findUnique({ where: { id } });
+    return this.prisma.course.findUnique({
+      where: { id },
+      include: { certificateTemplate: true },
+    });
   }
 
   update(id: number, dto: UpdateCourseDto) {

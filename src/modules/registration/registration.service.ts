@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
+import { Prisma } from 'prisma/generated/client';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
+import { RegistrationsQueryDto } from './dto/registrations-query.dto';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
 
 @Injectable()
@@ -17,18 +19,82 @@ export class RegistrationService {
     });
 
     if (existingRegistration) {
-      throw new BadRequestException('Ви вже зареєстровані на цей курс');
+      throw new BadRequestException('Ви вже зареєстровані на цей захід');
     }
 
     return this.prisma.registration.create({ data: dto });
   }
 
-  findAll() {
-    return this.prisma.registration.findMany();
+  async findAll(query: RegistrationsQueryDto) {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 20);
+
+    const where: Prisma.RegistrationWhereInput = {};
+
+    if (query.courseId) {
+      where.courseId = +query.courseId;
+    }
+
+    let orderBy: Prisma.RegistrationOrderByWithRelationInput = {};
+
+    if (query.orderBy && query.orderType) {
+      const [relation, field] = query.orderBy.split('.');
+
+      if (field) {
+        orderBy = { [relation]: { [field]: query.orderType } };
+      } else {
+        orderBy = { [query.orderBy]: query.orderType };
+      }
+    }
+
+    let skip = 0;
+
+    if (page && limit) {
+      skip = (page - 1) * limit;
+    }
+
+    const [data, totalCount] = await this.prisma.$transaction([
+      this.prisma.registration.findMany({
+        where,
+        orderBy,
+        take: limit,
+        skip: (page - 1) * limit,
+        include: { user: true, course: true },
+      }),
+      this.prisma.registration.count({ where }),
+    ]);
+
+    return { data, totalCount };
+
+    // return this.prisma.registration.findMany({
+    //   where,
+    //   orderBy,
+    //   take: limit,
+    //   skip: (page - 1) * limit,
+    //   include: { user: true, course: true },
+    // });
   }
 
   findByUserId(userId: string) {
-    return this.prisma.registration.findMany({ where: { userId } });
+    return this.prisma.registration.findMany({
+      where: { userId },
+      include: { course: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findByCourseId(courseId: number) {
+    return this.prisma.registration.findMany({
+      where: { courseId },
+      include: { course: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findCurrent(userId: string, courseId: number) {
+    return this.prisma.registration.findUnique({
+      where: { courseId_userId: { userId, courseId } },
+    });
   }
 
   updateEnabled(id: number, dto: ChangeEnableCertificateDto) {

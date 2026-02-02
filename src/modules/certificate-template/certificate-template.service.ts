@@ -8,8 +8,18 @@ import { UpdateCertificateTemplateDto } from './dto/update-certificate-template.
 export class CertificateTemplateService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateCertificateTemplateDto) {
-    return this.prisma.certificateTemplate.create({ data: dto });
+  // @ts-ignore
+  create(dto: CreateCertificateTemplateDto, file?: Express.Multer.File) {
+    const templateUrl = file
+      ? `/upload/templates/${file.filename}`
+      : dto.templateUrl;
+
+    return this.prisma.certificateTemplate.create({
+      data: {
+        ...dto,
+        templateUrl,
+      },
+    });
   }
 
   findAll() {
@@ -20,8 +30,26 @@ export class CertificateTemplateService {
     return this.prisma.certificateTemplate.findUnique({ where: { id } });
   }
 
-  update(id: number, dto: UpdateCertificateTemplateDto) {
-    return this.prisma.certificateTemplate.update({ where: { id }, data: dto });
+  update(
+    id: number,
+    dto: UpdateCertificateTemplateDto,
+    // @ts-ignore
+    file?: Express.Multer.File,
+  ) {
+    const templateUrl = file
+      ? `/upload/templates/${file.filename}`
+      : dto.templateUrl;
+
+    const dataToUpdate: any = { ...dto };
+
+    if (file) {
+      dataToUpdate.templateUrl = templateUrl;
+    }
+
+    return this.prisma.certificateTemplate.update({
+      where: { id },
+      data: dataToUpdate,
+    });
   }
 
   async remove(id: number) {
