@@ -1,6 +1,7 @@
+import { diskStorage } from 'multer';
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+
 import { CertificateTemplateService } from './certificate-template.service';
 import { CertificateTemplateController } from './certificate-template.controller';
 

@@ -9,6 +9,7 @@ datasource db {
 }
 
 enum PaymentStatus {
+  NONE
   PENDING
   PAID
   FAILED
@@ -63,9 +64,8 @@ model Course {
 model Registration {
   id Int @id @default(autoincrement())
 
-  paymentStatus PaymentStatus @default(PENDING)
-  paymentId     String?
-  liqpayOrderId String?
+  paymentStatus PaymentStatus @default(NONE)
+  paymentReceipt String?
   amount        Int?
 
   certificateEnabled Boolean @default(false)

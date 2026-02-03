@@ -1,5 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
+import { auth } from 'src/shared/lib/auth';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { CreateCertificateTemplateDto } from './dto/create-certificate-template.dto';
 import { UpdateCertificateTemplateDto } from './dto/update-certificate-template.dto';
@@ -9,7 +14,37 @@ export class CertificateTemplateService {
   constructor(private readonly prisma: PrismaService) {}
 
   // @ts-ignore
-  create(dto: CreateCertificateTemplateDto, file?: Express.Multer.File) {
+  async create(body: any, req: Request, file?: Express.Multer.File) {
+    const session = await auth.api.getSession({ headers: req.headers });
+
+    if (!session?.user || session.user.role !== 'admin') {
+      throw new UnauthorizedException(
+        'Тільки адміністратор може створити шаблон сертифіката',
+      );
+    }
+
+    // Parse JSON fields from FormData
+    const dto: CreateCertificateTemplateDto = {
+      name: body.name,
+      templateUrl: body.templateUrl || '',
+      namePosition: JSON.parse(body.namePosition),
+      courseNamePosition: JSON.parse(body.courseNamePosition),
+      courseDatePosition: JSON.parse(body.courseDatePosition),
+      certificateNumberPosition: JSON.parse(body.certificateNumberPosition),
+      durationPosition: JSON.parse(body.durationPosition),
+      pointsPosition: JSON.parse(body.pointsPosition),
+      yearOfInclusionPosition: JSON.parse(body.yearOfInclusionPosition),
+      numberOfInclusionPosition: JSON.parse(body.numberOfInclusionPosition),
+      eventTypePosition: JSON.parse(body.eventTypePosition),
+      certificateTypePosition: JSON.parse(body.certificateTypePosition),
+    };
+
+    if (!file && !dto.templateUrl) {
+      throw new BadRequestException(
+        "PDF файл або URL шаблону сертифіката є обов'язковим",
+      );
+    }
+
     const templateUrl = file
       ? `/upload/templates/${file.filename}`
       : dto.templateUrl;
@@ -30,12 +65,56 @@ export class CertificateTemplateService {
     return this.prisma.certificateTemplate.findUnique({ where: { id } });
   }
 
-  update(
+  async update(
     id: number,
-    dto: UpdateCertificateTemplateDto,
-    // @ts-ignore
+    body: any,
+    req: Request,
     file?: Express.Multer.File,
   ) {
+    // Verify admin role
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user || session.user.role !== 'admin') {
+      throw new UnauthorizedException(
+        'Only admins can update certificate templates',
+      );
+    }
+
+    // Parse JSON fields from FormData
+    const dto: UpdateCertificateTemplateDto = {
+      name: body.name,
+      templateUrl: body.templateUrl,
+      namePosition: body.namePosition
+        ? JSON.parse(body.namePosition)
+        : undefined,
+      courseNamePosition: body.courseNamePosition
+        ? JSON.parse(body.courseNamePosition)
+        : undefined,
+      courseDatePosition: body.courseDatePosition
+        ? JSON.parse(body.courseDatePosition)
+        : undefined,
+      certificateNumberPosition: body.certificateNumberPosition
+        ? JSON.parse(body.certificateNumberPosition)
+        : undefined,
+      durationPosition: body.durationPosition
+        ? JSON.parse(body.durationPosition)
+        : undefined,
+      pointsPosition: body.pointsPosition
+        ? JSON.parse(body.pointsPosition)
+        : undefined,
+      yearOfInclusionPosition: body.yearOfInclusionPosition
+        ? JSON.parse(body.yearOfInclusionPosition)
+        : undefined,
+      numberOfInclusionPosition: body.numberOfInclusionPosition
+        ? JSON.parse(body.numberOfInclusionPosition)
+        : undefined,
+      eventTypePosition: body.eventTypePosition
+        ? JSON.parse(body.eventTypePosition)
+        : undefined,
+      certificateTypePosition: body.certificateTypePosition
+        ? JSON.parse(body.certificateTypePosition)
+        : undefined,
+    };
+
     const templateUrl = file
       ? `/upload/templates/${file.filename}`
       : dto.templateUrl;
@@ -52,7 +131,14 @@ export class CertificateTemplateService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number, req: Request) {
+    // Verify admin role
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user || session.user.role !== 'admin') {
+      throw new UnauthorizedException(
+        'Only admins can delete certificate templates',
+      );
+    }
     await this.prisma.certificateTemplate.delete({ where: { id } });
     return id;
   }
