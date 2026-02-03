@@ -107,7 +107,7 @@ export class RegistrationService {
   updatePayment(id: number, dto: UpdateRegistrationPaymentDto) {
     return this.prisma.registration.update({
       where: { id },
-      data: dto,
+      data: { paymentStatus: dto.status },
     });
   }
 
