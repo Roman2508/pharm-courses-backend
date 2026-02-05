@@ -6,10 +6,12 @@ import {
   Param,
   Delete,
   Controller,
+  Query,
 } from '@nestjs/common';
 import { ApiBody } from '@nestjs/swagger';
 
 import { CourseService } from './course.service';
+import { CourseQueryDto } from './dto/course-query.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
@@ -24,13 +26,16 @@ export class CourseController {
   }
 
   @Get()
-  findAll() {
-    return this.courseService.findAll();
+  findAll(@Query() query: CourseQueryDto) {
+    return this.courseService.findAll(query);
   }
 
   @Get('/status/:status')
-  findByStatus(@Param('status') status: string) {
-    return this.courseService.findByStatus(status);
+  findByStatus(
+    @Param('status') status: string,
+    @Query() query: CourseQueryDto,
+  ) {
+    return this.courseService.findByStatus(status, query);
   }
 
   @Get(':id')

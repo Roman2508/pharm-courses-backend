@@ -1,8 +1,11 @@
 import {
   Injectable,
+  NotFoundException,
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
+import path from 'path';
+import * as fs from 'node:fs/promises';
 
 import { auth } from 'src/shared/lib/auth';
 import { PrismaService } from 'src/core/prisma/prisma.service';
@@ -13,7 +16,6 @@ import { UpdateCertificateTemplateDto } from './dto/update-certificate-template.
 export class CertificateTemplateService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // @ts-ignore
   async create(body: any, req: Request, file?: Express.Multer.File) {
     const session = await auth.api.getSession({ headers: req.headers });
 
@@ -23,7 +25,6 @@ export class CertificateTemplateService {
       );
     }
 
-    // Parse JSON fields from FormData
     const dto: CreateCertificateTemplateDto = {
       name: body.name,
       templateUrl: body.templateUrl || '',
@@ -71,15 +72,13 @@ export class CertificateTemplateService {
     req: Request,
     file?: Express.Multer.File,
   ) {
-    // Verify admin role
     const session = await auth.api.getSession({ headers: req.headers });
     if (!session?.user || session.user.role !== 'admin') {
       throw new UnauthorizedException(
-        'Only admins can update certificate templates',
+        'Тільки адміністратор може оновити шаблон сертифіката',
       );
     }
 
-    // Parse JSON fields from FormData
     const dto: UpdateCertificateTemplateDto = {
       name: body.name,
       templateUrl: body.templateUrl,
@@ -119,6 +118,25 @@ export class CertificateTemplateService {
       ? `/upload/templates/${file.filename}`
       : dto.templateUrl;
 
+    const registration = await this.prisma.certificateTemplate.findFirst({
+      where: { id },
+    });
+
+    if (!registration) {
+      throw new NotFoundException('Шаблон сертифіката не знайдено');
+    }
+
+    const oldTemplateUrl = registration.templateUrl;
+
+    if (oldTemplateUrl) {
+      try {
+        const oldPath = path.join(process.cwd(), oldTemplateUrl);
+        await fs.unlink(oldPath);
+      } catch (e) {
+        console.log('Old template not found, skip delete');
+      }
+    }
+
     const dataToUpdate: any = { ...dto };
 
     if (file) {
@@ -132,11 +150,10 @@ export class CertificateTemplateService {
   }
 
   async remove(id: number, req: Request) {
-    // Verify admin role
     const session = await auth.api.getSession({ headers: req.headers });
     if (!session?.user || session.user.role !== 'admin') {
       throw new UnauthorizedException(
-        'Only admins can delete certificate templates',
+        'Тільки адміністратор може видалити шаблон сертифіката',
       );
     }
     await this.prisma.certificateTemplate.delete({ where: { id } });

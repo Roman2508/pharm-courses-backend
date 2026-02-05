@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
+import { CourseQueryDto } from './dto/course-query.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
@@ -12,15 +13,42 @@ export class CourseService {
     return this.prisma.course.create({ data: dto });
   }
 
-  findAll() {
-    return this.prisma.course.findMany({ orderBy: { createdAt: 'desc' } });
+  async findAll(query: CourseQueryDto) {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 20);
+
+    // return this.prisma.course.findMany({
+    //   take: limit,
+    //   skip: (page - 1) * limit,
+    //   orderBy: { createdAt: 'desc' },
+    // });
+
+    const [data, totalCount] = await this.prisma.$transaction([
+      this.prisma.course.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: (page - 1) * limit,
+      }),
+      this.prisma.course.count(),
+    ]);
+
+    return { data, totalCount };
   }
 
-  findByStatus(status: string) {
+  findByStatus(status: string, query: CourseQueryDto) {
     if (status !== 'PLANNED' && status !== 'ARCHIVED') {
       throw new BadRequestException('Сourse status is invalid');
     }
-    return this.prisma.course.findMany({ where: { status } });
+
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 9999);
+
+    return this.prisma.course.findMany({
+      where: { status },
+      take: limit,
+      skip: (page - 1) * limit,
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   findOne(id: number) {
