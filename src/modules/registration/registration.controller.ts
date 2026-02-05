@@ -1,23 +1,23 @@
 import {
+  Req,
   Get,
   Post,
   Body,
   Patch,
+  Query,
   Param,
   Delete,
   Controller,
-  Query,
-  UseInterceptors,
-  Req,
   UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 import { RegistrationService } from './registration.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
-import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
 
 @Controller('registration')
 export class RegistrationController {
@@ -26,6 +26,11 @@ export class RegistrationController {
   @Post()
   create(@Body() dto: CreateRegistrationDto) {
     return this.registrationService.create(dto);
+  }
+
+  @Post('/free')
+  createForFree(@Body() dto: CreateRegistrationDto) {
+    return this.registrationService.createForFree(dto);
   }
 
   @Get()

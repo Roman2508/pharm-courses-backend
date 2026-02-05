@@ -30,6 +30,7 @@ enum CourseRegistrationStatus {
 enum CourseTargetAudience {
   PHARMACISTS
   LABORATORY_ASSISTANTS
+  PHARMACISTS_AND_LABORATORY_ASSISTANTS
 }
 
 model Course {

@@ -23,7 +23,7 @@ import { CertificateTemplateController } from './certificate-template.controller
         if (file.mimetype === 'application/pdf') {
           cb(null, true);
         } else {
-          cb(new Error('Only PDF files are allowed'), false);
+          cb(new Error('Можна завантажити тільки файл PDF'), false);
         }
       },
       limits: {

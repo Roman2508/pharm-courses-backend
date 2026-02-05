@@ -33,6 +33,24 @@ export class RegistrationService {
     return this.prisma.registration.create({ data: dto });
   }
 
+  async createForFree(dto: CreateRegistrationDto) {
+    const existingRegistration = await this.prisma.registration.findUnique({
+      where: {
+        courseId_userId: { userId: dto.userId, courseId: dto.courseId },
+      },
+    });
+
+    if (existingRegistration) {
+      throw new BadRequestException(
+        'Повторна реєстрація на цей захід недоступна',
+      );
+    }
+
+    return this.prisma.registration.create({
+      data: { ...dto, paymentStatus: 'PAID' },
+    });
+  }
+
   async findAll(query: RegistrationsQueryDto) {
     const page = Number(query.page ?? 1);
     const limit = Number(query.limit ?? 20);

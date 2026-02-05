@@ -25,7 +25,12 @@ import { UserController } from './user.controller';
         if (allowed.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new Error('Only images are allowed'), false);
+          cb(
+            new Error(
+              'Можна завантажити лише файли з розширенням: jpeg, jpg, png та webp',
+            ),
+            false,
+          );
         }
       },
 
