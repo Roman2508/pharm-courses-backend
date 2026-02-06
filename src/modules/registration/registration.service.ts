@@ -161,7 +161,7 @@ export class RegistrationService {
         const oldPath = path.join(process.cwd(), oldImage);
         await fs.unlink(oldPath);
       } catch (e) {
-        console.log('Old avatar not found, skip delete');
+        console.log('Old payment receipt not found, skip delete');
       }
     }
 
@@ -171,7 +171,32 @@ export class RegistrationService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number, req: Request) {
+    const session = await auth.api.getSession({ headers: req.headers });
+
+    if (!session?.user?.id) {
+      throw new UnauthorizedException(
+        'Сесію користувача не знайдено. Увійдіть у систему повторно',
+      );
+    }
+
+    const existedReg = await this.prisma.registration.findUnique({
+      where: { id, userId: session.user.id },
+    });
+
+    if (!existedReg) {
+      throw new NotFoundException('Реєстрацію не знайдено');
+    }
+
+    if (existedReg.paymentReceipt) {
+      try {
+        const oldPath = path.join(process.cwd(), existedReg.paymentReceipt);
+        await fs.unlink(oldPath);
+      } catch (e) {
+        console.log('Old payment receipt not found, skip delete');
+      }
+    }
+
     await this.prisma.registration.delete({ where: { id } });
     return id;
   }

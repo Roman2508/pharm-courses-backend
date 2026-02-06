@@ -35,4 +35,29 @@ export const auth = betterAuth({
       jobTitle: { type: 'string' },
     },
   },
+
+  session: {
+    expiresIn: 60 * 60 * 24 * 14,
+    updateAge: 60 * 60 * 24,
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+    },
+  },
+
+  socialProviders: {},
+
+  secret: process.env.BETTER_AUTH_SECRET || 'your-secret-key-change-this',
+
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    cookiePrefix: 'pharm-courses',
+    generateSessionToken: true,
+    defaultCookieAttributes: {
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      path: '/',
+    },
+  },
 });

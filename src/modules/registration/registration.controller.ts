@@ -78,7 +78,7 @@ export class RegistrationController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.registrationService.remove(+id);
+  remove(@Req() req: Request, @Param('id') id: string) {
+    return this.registrationService.remove(+id, req);
   }
 }
