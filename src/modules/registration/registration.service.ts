@@ -101,12 +101,16 @@ export class RegistrationService {
     });
   }
 
-  findByCourseId(courseId: number) {
-    return this.prisma.registration.findMany({
-      where: { courseId },
-      include: { course: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  // findByCourseId(courseId: number) {
+  //   return this.prisma.registration.findMany({
+  //     where: { courseId },
+  //     include: { course: true },
+  //     orderBy: { createdAt: 'desc' },
+  //   });
+  // }
+
+  findCountByCourseId(courseId: number) {
+    return this.prisma.registration.count({ where: { courseId } });
   }
 
   findCurrent(userId: string, courseId: number) {

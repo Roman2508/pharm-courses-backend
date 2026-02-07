@@ -43,6 +43,11 @@ export class RegistrationController {
     return this.registrationService.findByUserId(userId);
   }
 
+  @Get('/course/count/:courseId')
+  findCountByCourseId(@Param('courseId') courseId: string) {
+    return this.registrationService.findCountByCourseId(+courseId);
+  }
+
   @Get('/current/:userId/:courseId')
   findCurrent(
     @Param('userId') userId: string,
