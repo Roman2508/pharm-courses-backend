@@ -17,12 +17,6 @@ export class CourseService {
     const page = Number(query.page ?? 1);
     const limit = Number(query.limit ?? 20);
 
-    // return this.prisma.course.findMany({
-    //   take: limit,
-    //   skip: (page - 1) * limit,
-    //   orderBy: { createdAt: 'desc' },
-    // });
-
     const [data, totalCount] = await this.prisma.$transaction([
       this.prisma.course.findMany({
         orderBy: { createdAt: 'desc' },

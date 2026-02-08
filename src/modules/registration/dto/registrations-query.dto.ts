@@ -21,6 +21,8 @@ export class RegistrationsQueryDto {
     'user.name',
     'amount',
     'certificateEnabled',
+    'paymentReceipt',
+    'paymentStatus',
   ])
   orderBy?: keyof Prisma.RegistrationOrderByWithRelationInput;
 
