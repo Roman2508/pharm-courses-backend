@@ -37,15 +37,15 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('Pharm couses API')
-      .setDescription('This is the pharm courses API documentation')
-      .setVersion('1.0')
-      .build();
-    const documentFactory = () => SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('swagger', app, documentFactory);
-  }
+  // if (process.env.NODE_ENV !== 'production') {
+  //   const config = new DocumentBuilder()
+  //     .setTitle('Pharm couses API')
+  //     .setDescription('This is the pharm courses API documentation')
+  //     .setVersion('1.0')
+  //     .build();
+  //   const documentFactory = () => SwaggerModule.createDocument(app, config);
+  //   SwaggerModule.setup('swagger', app, documentFactory);
+  // }
 
   const PORT = process.env.PORT || 7777;
 
