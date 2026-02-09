@@ -5,8 +5,8 @@ import { CoreService } from './core.service';
 export class CoreController {
   constructor(private readonly CoreService: CoreService) {}
 
-  @Get()
-  getHello(): string {
-    return this.CoreService.getHello();
-  }
+  // @Get()
+  // getHello(): string {
+  //   return this.CoreService.getHello();
+  // }
 }

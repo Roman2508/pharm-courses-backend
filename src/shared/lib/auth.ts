@@ -31,6 +31,16 @@ export const auth = betterAuth({
 
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
+      const origins = (process.env.TRUSTED_ORIGINS || '')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
+
+      const FRONTEND_URL = origins[0];
+      const tokenUrl = new URL(url);
+      tokenUrl.searchParams.set('callbackURL', `${FRONTEND_URL}/auth/verified`);
+      const finalUrl = tokenUrl.toString();
+
       await resend.emails.send({
         from: 'onboarding@resend.dev',
         // from: 'Курси БПР <noreply@pharm.zt.ua>',
@@ -44,12 +54,11 @@ export const auth = betterAuth({
 
         <p>Щоб завершити реєстрацію та підтвердити свою електронну пошту, будь ласка, перейдіть за посиланням нижче:</p>
 
-        <p><a href="${url}">[Підтвердити електронну пошту]</a></p>
+        <p><a href="${finalUrl}">[Підтвердити електронну пошту]</a></p>
 
         <p>Якщо ви не реєструвалися на нашому сайті, просто проігноруйте цей лист.</p>
 
         <p>З повагою</p>
-        <p>Команда курсів БПР</p>
         <p>Житомирський базовий фармацевтичний фаховий коледж</p>
         `,
       });
