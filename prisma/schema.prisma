@@ -46,6 +46,8 @@ model Course {
   registrationOpen CourseRegistrationStatus  @default(OPEN)
   targetAudience   CourseTargetAudience      @default(PHARMACISTS)
 
+  paymentQrCode String?
+
   duration               Int
   pointsBpr              Int
   yearOfInclusionToBpr   Int

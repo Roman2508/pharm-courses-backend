@@ -13,10 +13,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+import { User } from 'prisma/generated/client';
 import { RegistrationService } from './registration.service';
+import { Roles } from 'src/shared/decorators/roles.decorator';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
+import { CurrentUser } from 'src/shared/decorators/current-user.decorator';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
 
 @Controller('registration')
@@ -33,14 +36,15 @@ export class RegistrationController {
     return this.registrationService.createForFree(dto);
   }
 
+  @Roles('admin')
   @Get()
   findAll(@Query() query: RegistrationsQueryDto) {
     return this.registrationService.findAll(query);
   }
 
-  @Get('/user/:userId')
-  findByUserId(@Param('userId') userId: string) {
-    return this.registrationService.findByUserId(userId);
+  @Get('/user')
+  findByUserId(@CurrentUser() user: User) {
+    return this.registrationService.findByUserId(user.id);
   }
 
   @Get('/course/count/:courseId')
@@ -48,14 +52,12 @@ export class RegistrationController {
     return this.registrationService.findCountByCourseId(+courseId);
   }
 
-  @Get('/current/:userId/:courseId')
-  findCurrent(
-    @Param('userId') userId: string,
-    @Param('courseId') courseId: string,
-  ) {
-    return this.registrationService.findCurrent(userId, +courseId);
+  @Get('/course/current/:courseId')
+  findCurrent(@CurrentUser() user: User, @Param('courseId') courseId: string) {
+    return this.registrationService.findCurrent(user.id, +courseId);
   }
 
+  @Roles('admin')
   @Patch(':id')
   updateEnabled(
     @Param('id') id: string,
@@ -64,6 +66,7 @@ export class RegistrationController {
     return this.registrationService.updateEnabled(+id, dto);
   }
 
+  @Roles('admin')
   @Patch('/payment/:id')
   updatePayment(
     @Param('id') id: string,

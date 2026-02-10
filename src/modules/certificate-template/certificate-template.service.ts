@@ -17,13 +17,13 @@ export class CertificateTemplateService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(body: any, req: Request, file?: Express.Multer.File) {
-    const session = await auth.api.getSession({ headers: req.headers });
+    // const session = await auth.api.getSession({ headers: req.headers });
 
-    if (!session?.user || session.user.role !== 'admin') {
-      throw new UnauthorizedException(
-        'Тільки адміністратор може створити шаблон сертифіката',
-      );
-    }
+    // if (!session?.user || session.user.role !== 'admin') {
+    //   throw new UnauthorizedException(
+    //     'Тільки адміністратор може створити шаблон сертифіката',
+    //   );
+    // }
 
     const dto: CreateCertificateTemplateDto = {
       name: body.name,
@@ -72,12 +72,12 @@ export class CertificateTemplateService {
     req: Request,
     file?: Express.Multer.File,
   ) {
-    const session = await auth.api.getSession({ headers: req.headers });
-    if (!session?.user || session.user.role !== 'admin') {
-      throw new UnauthorizedException(
-        'Тільки адміністратор може оновити шаблон сертифіката',
-      );
-    }
+    // const session = await auth.api.getSession({ headers: req.headers });
+    // if (!session?.user || session.user.role !== 'admin') {
+    //   throw new UnauthorizedException(
+    //     'Тільки адміністратор може оновити шаблон сертифіката',
+    //   );
+    // }
 
     const dto: UpdateCertificateTemplateDto = {
       name: body.name,

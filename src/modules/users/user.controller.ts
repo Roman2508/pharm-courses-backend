@@ -1,11 +1,11 @@
-import { FileInterceptor } from '@nestjs/platform-express';
 import {
   Req,
   Patch,
   Controller,
-  UseInterceptors,
   UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 import { UserService } from './user.service';
 
