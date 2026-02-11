@@ -16,6 +16,11 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum RegistrationType {
+  MEMBER
+  TRAINER
+}
+
 enum CourseStatus {
   DRAFT
   PLANNED
@@ -67,6 +72,7 @@ model Course {
 model Registration {
   id Int @id @default(autoincrement())
 
+  type RegistrationType @default(MEMBER)
   paymentStatus PaymentStatus @default(NONE)
   paymentReceipt String?
   amount        Int?

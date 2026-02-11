@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+
+import { RegistrationType } from 'prisma/generated/enums';
 
 export class CreateRegistrationDto {
   @ApiProperty()
@@ -13,4 +15,9 @@ export class CreateRegistrationDto {
   @ApiProperty()
   @IsNumber()
   courseId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(RegistrationType)
+  type?: RegistrationType;
 }
