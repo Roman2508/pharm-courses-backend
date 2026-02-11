@@ -116,6 +116,7 @@ export class RegistrationService {
   findCurrent(userId: string, courseId: number) {
     return this.prisma.registration.findUnique({
       where: { courseId_userId: { userId, courseId } },
+      include: { course: { select: { paymentQrCode: true } } },
     });
   }
 

@@ -60,19 +60,28 @@ export class CourseService {
   async update(id: number, dto: UpdateCourseDto) {
     const oldCourse = await this.prisma.course.findUnique({ where: { id } });
 
-    let paymentQrCode = oldCourse?.paymentQrCode;
+    if (!oldCourse) {
+      throw new BadRequestException('Курс не знайдено');
+    }
+
+    let paymentQrCode = oldCourse.paymentQrCode;
 
     if (paymentQrCode) {
       try {
         const oldPath = path.join(process.cwd(), paymentQrCode);
         await fs.unlink(oldPath);
       } catch (e) {
-        console.log('Old QR code not found, skip delete');
+        // console.log('Old QR code not found, skip delete');
       }
     }
 
-    if (dto.price && oldCourse && oldCourse.price !== dto.price) {
-      paymentQrCode = await this.generateQrCode(dto.price);
+    if (dto.price !== undefined) {
+      const isChangePrice = oldCourse.price !== dto.price;
+      const isQrCodeExist = !!oldCourse.paymentQrCode;
+
+      if (isChangePrice || !isQrCodeExist) {
+        paymentQrCode = await this.generateQrCode(dto.price);
+      }
     }
 
     return this.prisma.course.update({
@@ -82,6 +91,17 @@ export class CourseService {
   }
 
   async remove(id: number) {
+    const course = await this.prisma.course.findUnique({ where: { id } });
+
+    if (course?.paymentQrCode) {
+      try {
+        const oldPath = path.join(process.cwd(), course.paymentQrCode);
+        await fs.unlink(oldPath);
+      } catch (e) {
+        // console.log('Old QR code not found, skip delete');
+      }
+    }
+
     await this.prisma.course.delete({ where: { id } });
     return id;
   }
@@ -98,7 +118,7 @@ export class CourseService {
           name: 'Державна казначейська служба України, м. Київ',
           account: 'UA528201720314271004202020020',
           code: '02011261',
-          amount: amount,
+          amount: String(amount),
           description: 'Плата за БПР, ПІБ учасника',
         }),
       });
@@ -117,10 +137,14 @@ export class CourseService {
 
       const buffer = Buffer.from(await response.arrayBuffer());
 
-      const filename = `qr-code-${Date.now()}.png`;
-      const uploadDir = join(process.cwd(), 'upload', 'qr-codes');
-      const filePath = join(uploadDir, filename);
-      await writeFile(filePath, buffer);
+      const filePath = `upload/qr-codes/qr-code-${Date.now()}.png`;
+      const uploadDir = join(process.cwd(), filePath);
+      await writeFile(uploadDir, buffer);
+
+      // const filename = `qr-code-${Date.now()}.png`;
+      // const uploadDir = join(process.cwd(), 'upload', 'qr-codes');
+      // const filePath = join(uploadDir, filename);
+      // await writeFile(filePath, buffer);
 
       return filePath;
     } catch (error) {

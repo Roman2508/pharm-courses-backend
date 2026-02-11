@@ -26,6 +26,11 @@ export class CreateCourseDto {
   link?: string;
 
   @ApiProperty()
+  @IsString()
+  @IsOptional()
+  paymentQrCode?: string;
+
+  @ApiProperty()
   @IsNumber()
   @IsPositive()
   price: number;
