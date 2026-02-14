@@ -52,9 +52,8 @@ export class CertificateTemplateController {
     @Param('id') id: string,
     @Body() body: any,
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: Request,
   ) {
-    return this.certificateTemplateService.update(+id, body, req, file);
+    return this.certificateTemplateService.update(+id, body, file);
   }
 
   @Roles('admin')

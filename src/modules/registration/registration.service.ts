@@ -10,6 +10,7 @@ import * as fs from 'node:fs/promises';
 import { auth } from 'src/shared/lib/auth';
 import { Prisma } from 'prisma/generated/client';
 import { PrismaService } from 'src/core/prisma/prisma.service';
+import { ManyRegistrationsDto } from './dto/many-registrations.dto';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
@@ -96,18 +97,18 @@ export class RegistrationService {
   findByUserId(userId: string) {
     return this.prisma.registration.findMany({
       where: { userId },
-      include: { course: true },
+      include: { course: { include: { certificateTemplate: true } } },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  // findByCourseId(courseId: number) {
-  //   return this.prisma.registration.findMany({
-  //     where: { courseId },
-  //     include: { course: true },
-  //     orderBy: { createdAt: 'desc' },
-  //   });
-  // }
+  findMany(dto: ManyRegistrationsDto) {
+    return this.prisma.registration.findMany({
+      where: { id: { in: dto.ids } },
+      include: { course: true, user: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
 
   findCountByCourseId(courseId: number) {
     return this.prisma.registration.count({ where: { courseId } });
@@ -120,10 +121,10 @@ export class RegistrationService {
     });
   }
 
-  updateEnabled(id: number, dto: ChangeEnableCertificateDto) {
-    return this.prisma.registration.update({
-      where: { id },
-      data: dto,
+  updateEnabled(dto: ChangeEnableCertificateDto) {
+    return this.prisma.registration.updateMany({
+      where: { id: { in: dto.ids } },
+      data: { certificateEnabled: dto.certificateEnabled },
     });
   }
 
@@ -196,7 +197,7 @@ export class RegistrationService {
     if (existedReg.paymentReceipt) {
       try {
         const oldPath = path.join(process.cwd(), existedReg.paymentReceipt);
-        await fs.unlink(oldPath);
+        await fs.unlink(oldPath).catch(() => {});
       } catch (e) {
         console.log('Old payment receipt not found, skip delete');
       }
@@ -204,5 +205,36 @@ export class RegistrationService {
 
     await this.prisma.registration.delete({ where: { id } });
     return id;
+  }
+
+  async removeMany(dto: ManyRegistrationsDto) {
+    const { ids } = dto;
+
+    if (!ids || ids.length === 0) {
+      throw new BadRequestException('Не передано id для видалення');
+    }
+
+    const registrations = await this.prisma.registration.findMany({
+      where: { id: { in: ids } },
+    });
+
+    if (!registrations.length) {
+      throw new NotFoundException('Реєстрації не знайдені');
+    }
+
+    await Promise.all(
+      registrations.map((reg) => {
+        if (!reg.paymentReceipt) return;
+
+        const filePath = path.join(process.cwd(), reg.paymentReceipt);
+        return fs.unlink(filePath).catch(() => {});
+      }),
+    );
+
+    await this.prisma.registration.deleteMany({
+      where: { id: { in: registrations.map((r) => r.id) } },
+    });
+
+    return registrations.map((r) => r.id);
   }
 }

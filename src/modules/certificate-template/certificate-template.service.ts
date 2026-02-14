@@ -17,14 +17,6 @@ export class CertificateTemplateService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(body: any, req: Request, file?: Express.Multer.File) {
-    // const session = await auth.api.getSession({ headers: req.headers });
-
-    // if (!session?.user || session.user.role !== 'admin') {
-    //   throw new UnauthorizedException(
-    //     'Тільки адміністратор може створити шаблон сертифіката',
-    //   );
-    // }
-
     const dto: CreateCertificateTemplateDto = {
       name: body.name,
       templateUrl: body.templateUrl || '',
@@ -66,19 +58,7 @@ export class CertificateTemplateService {
     return this.prisma.certificateTemplate.findUnique({ where: { id } });
   }
 
-  async update(
-    id: number,
-    body: any,
-    req: Request,
-    file?: Express.Multer.File,
-  ) {
-    // const session = await auth.api.getSession({ headers: req.headers });
-    // if (!session?.user || session.user.role !== 'admin') {
-    //   throw new UnauthorizedException(
-    //     'Тільки адміністратор може оновити шаблон сертифіката',
-    //   );
-    // }
-
+  async update(id: number, body: any, file?: Express.Multer.File) {
     const dto: UpdateCertificateTemplateDto = {
       name: body.name,
       templateUrl: body.templateUrl,
@@ -128,7 +108,7 @@ export class CertificateTemplateService {
 
     const oldTemplateUrl = registration.templateUrl;
 
-    if (oldTemplateUrl) {
+    if (oldTemplateUrl !== templateUrl) {
       try {
         const oldPath = path.join(process.cwd(), oldTemplateUrl);
         await fs.unlink(oldPath);

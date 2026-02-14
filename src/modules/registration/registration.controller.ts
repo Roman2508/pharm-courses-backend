@@ -21,6 +21,7 @@ import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
 import { CurrentUser } from 'src/shared/decorators/current-user.decorator';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
+import { ManyRegistrationsDto } from './dto/many-registrations.dto';
 
 @Controller('registration')
 export class RegistrationController {
@@ -47,6 +48,11 @@ export class RegistrationController {
     return this.registrationService.findByUserId(user.id);
   }
 
+  @Post('/many')
+  findMany(@Body() dto: ManyRegistrationsDto) {
+    return this.registrationService.findMany(dto);
+  }
+
   @Get('/course/count/:courseId')
   findCountByCourseId(@Param('courseId') courseId: string) {
     return this.registrationService.findCountByCourseId(+courseId);
@@ -58,12 +64,15 @@ export class RegistrationController {
   }
 
   @Roles('admin')
-  @Patch(':id')
-  updateEnabled(
-    @Param('id') id: string,
-    @Body() dto: ChangeEnableCertificateDto,
-  ) {
-    return this.registrationService.updateEnabled(+id, dto);
+  @Patch('')
+  updateEnabled(@Body() dto: ChangeEnableCertificateDto) {
+    return this.registrationService.updateEnabled(dto);
+  }
+
+  @Roles('admin')
+  @Post('remove/many')
+  removeMany(@Body() dto: ManyRegistrationsDto) {
+    return this.registrationService.removeMany(dto);
   }
 
   @Roles('admin')
