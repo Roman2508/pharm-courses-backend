@@ -1,3 +1,4 @@
+import * as uklatn from 'uklatn';
 import { diskStorage } from 'multer';
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
@@ -12,10 +13,15 @@ import { CertificateTemplateController } from './certificate-template.controller
         destination: './upload/templates',
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now();
-          const filename = `${file.originalname.replace(
-            /\.pdf$/i,
-            '',
-          )}-${uniqueSuffix}.pdf`;
+
+          const translitName = uklatn.encode(file.originalname.replace(/\.pdf$/i, ''));
+          const filename = `${translitName}-${uniqueSuffix}.pdf`;
+
+          // const filename = `${file.originalname.replace(
+          //   /\.pdf$/i,
+          //   '',
+          // )}-${uniqueSuffix}.pdf`;
+
           cb(null, filename);
         },
       }),

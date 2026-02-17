@@ -16,7 +16,7 @@ import { UpdateCertificateTemplateDto } from './dto/update-certificate-template.
 export class CertificateTemplateService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(body: any, req: Request, file?: Express.Multer.File) {
+  async create(body: any, _: Request, file?: Express.Multer.File) {
     const dto: CreateCertificateTemplateDto = {
       name: body.name,
       templateUrl: body.templateUrl || '',
@@ -43,10 +43,7 @@ export class CertificateTemplateService {
       : dto.templateUrl;
 
     return this.prisma.certificateTemplate.create({
-      data: {
-        ...dto,
-        templateUrl,
-      },
+      data: { ...dto, templateUrl },
     });
   }
 
@@ -108,7 +105,7 @@ export class CertificateTemplateService {
 
     const oldTemplateUrl = registration.templateUrl;
 
-    if (oldTemplateUrl !== templateUrl) {
+    if (templateUrl && oldTemplateUrl !== templateUrl) {
       try {
         const oldPath = path.join(process.cwd(), oldTemplateUrl);
         await fs.unlink(oldPath);
