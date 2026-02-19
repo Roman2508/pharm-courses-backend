@@ -16,12 +16,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from 'prisma/generated/client';
 import { RegistrationService } from './registration.service';
 import { Roles } from 'src/shared/decorators/roles.decorator';
+import { multerOptions } from 'src/shared/lib/multer-options';
+import { ManyRegistrationsDto } from './dto/many-registrations.dto';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
 import { CurrentUser } from 'src/shared/decorators/current-user.decorator';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
-import { ManyRegistrationsDto } from './dto/many-registrations.dto';
 
 @Controller('registration')
 export class RegistrationController {
@@ -85,13 +86,33 @@ export class RegistrationController {
   }
 
   @Patch('/payment-receipt/:id')
-  @UseInterceptors(FileInterceptor('paymentReceipt'))
+  @UseInterceptors(
+    FileInterceptor(
+      'paymentReceipt',
+      multerOptions('./upload/payment-receipts'),
+    ),
+  )
   async updatePaymentReceipt(
     @Req() req: Request,
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.registrationService.updatePaymentReceipt(+id, req, file);
+  }
+
+  @Patch('/free-participation/:id')
+  @UseInterceptors(
+    FileInterceptor(
+      'freeParticipation',
+      multerOptions('./upload/free-participation'),
+    ),
+  )
+  async freeParticipation(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.registrationService.freeParticipation(+id, req, file);
   }
 
   @Delete(':id')

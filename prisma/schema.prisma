@@ -75,6 +75,7 @@ model Registration {
   type RegistrationType @default(MEMBER)
   paymentStatus PaymentStatus @default(NONE)
   paymentReceipt String?
+  freeParticipation String?
   amount        Int?
 
   certificateEnabled Boolean @default(false)

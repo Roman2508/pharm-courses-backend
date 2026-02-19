@@ -177,6 +177,51 @@ export class RegistrationService {
     });
   }
 
+  async freeParticipation(
+    id: number,
+    req: Request,
+    file?: Express.Multer.File,
+  ) {
+    const session = await auth.api.getSession({ headers: req.headers });
+
+    if (!session?.user?.id) {
+      throw new UnauthorizedException(
+        'Сесію користувача не знайдено. Увійдіть у систему повторно',
+      );
+    }
+
+    const freeParticipationUrl = file
+      ? `/upload/free-participation/${file.filename}`
+      : '';
+
+    const registration = await this.prisma.registration.findFirst({
+      where: { id },
+    });
+
+    if (!registration) {
+      throw new NotFoundException('Реєстрацію не знайдено');
+    }
+
+    const oldImage = registration.freeParticipation;
+
+    if (oldImage) {
+      try {
+        const oldPath = path.join(process.cwd(), oldImage);
+        await fs.unlink(oldPath);
+      } catch (e) {
+        console.log('Old free participation not found, skip delete');
+      }
+    }
+
+    return this.prisma.registration.update({
+      where: { id },
+      data: {
+        freeParticipation: freeParticipationUrl,
+        paymentStatus: 'PENDING',
+      },
+    });
+  }
+
   async remove(id: number, req: Request) {
     const session = await auth.api.getSession({ headers: req.headers });
 
