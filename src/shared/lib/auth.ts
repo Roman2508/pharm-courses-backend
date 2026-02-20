@@ -67,7 +67,12 @@ export const auth = betterAuth({
   },
 
   user: {
+    // changeEmail: { Перевірити чи правильно так включати зміну емайла
+    //   enabled: true,
+    // },
+
     additionalFields: {
+      birthDate: { type: 'date' },
       phone: { type: 'string' },
       region_city: { type: 'string' },
       education: { type: 'string' },

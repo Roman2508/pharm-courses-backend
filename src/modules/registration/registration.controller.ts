@@ -23,6 +23,7 @@ import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
 import { CurrentUser } from 'src/shared/decorators/current-user.decorator';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
+import { ExportRegistrationsDto } from './dto/export-registration.dto';
 
 @Controller('registration')
 export class RegistrationController {
@@ -74,6 +75,12 @@ export class RegistrationController {
   @Post('remove/many')
   removeMany(@Body() dto: ManyRegistrationsDto) {
     return this.registrationService.removeMany(dto);
+  }
+
+  @Roles('admin')
+  @Patch('/export-registrations')
+  exportRegistration(@Body() dto: ExportRegistrationsDto) {
+    return this.registrationService.exportRegistration(dto);
   }
 
   @Roles('admin')

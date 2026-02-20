@@ -130,6 +130,7 @@ model User {
   accounts      Account[]
   registration  Registration[]
 
+  birthDate                DateTime?
   phone                    String?
   region_city              String?
   education                String?

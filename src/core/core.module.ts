@@ -11,6 +11,7 @@ import { RolesGuard } from 'src/shared/guards/roles.guard';
 import { CourseModule } from 'src/modules/course/course.module';
 import { BetterAuthGuard } from 'src/shared/guards/better-auth.guard';
 import { RegistrationModule } from 'src/modules/registration/registration.module';
+import { GoogleSheetsModule } from 'src/modules/google-sheets/google-sheets.module';
 import { CertificateTemplateModule } from 'src/modules/certificate-template/certificate-template.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { CertificateTemplateModule } from 'src/modules/certificate-template/cert
     UserModule,
     PrismaModule,
     CourseModule,
+    GoogleSheetsModule,
     RegistrationModule,
     CertificateTemplateModule,
   ],

@@ -14,11 +14,17 @@ import { ManyRegistrationsDto } from './dto/many-registrations.dto';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
+import { ExportRegistrationsDto } from './dto/export-registration.dto';
+import { GoogleSheetsService } from '../google-sheets/google-sheets.service';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
+import { generateSertificateNumber } from 'src/shared/helpers/generate-sertificate-number';
 
 @Injectable()
 export class RegistrationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly googleSheetsService: GoogleSheetsService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async create(dto: CreateRegistrationDto) {
     const existingRegistration = await this.prisma.registration.findUnique({
@@ -126,6 +132,65 @@ export class RegistrationService {
       where: { id: { in: dto.ids } },
       data: { certificateEnabled: dto.certificateEnabled },
     });
+  }
+
+  async exportRegistration(dto: ExportRegistrationsDto) {
+    const registrations = await this.prisma.registration.findMany({
+      where: { id: { in: dto.ids } },
+      include: { course: true, user: true },
+    });
+
+    if (!registrations.length) {
+      throw new NotFoundException('Реєстрації не знайдені');
+    }
+
+    /* 
+    const results = await this.googleSheetsService.getTestResults()
+    
+    const resultsMap = new Map(
+      results.map(r => [r.email.toLowerCase(), r.result])
+    )
+
+    const merged = registrations.map(reg => {
+      const email = reg.user.email.toLowerCase()
+      const testResult = resultsMap.get(email)
+
+      return {
+        ...reg,
+        testResult: testResult || "Не проходив"
+      }
+    })
+    */
+
+    const newData = registrations.map((reg) => {
+      const { course, user, type, id } = reg;
+
+      const currentYear = new Date().getFullYear();
+
+      const regNumber = generateSertificateNumber(id);
+      const sertNumber = `${currentYear}-2044-${course.numberOfInclusionToBpr}-${regNumber}`;
+
+      return {
+        ['Реєстраційний номер Провайдера']: '2044',
+        ['Реєстраційний номер заходу']: course.numberOfInclusionToBpr,
+        ['Номер сертифіката']: sertNumber,
+        ["Прізвище, власне ім'я, по батькові (за наявності) учасника"]:
+          user.name,
+        ['Бали БПР']:
+          type === 'TRAINER' ? course.pointsBpr * 2 : course.pointsBpr,
+        ['Дата народження']: user.birthDate
+          ? new Date(user.birthDate).toLocaleDateString('uk-UA')
+          : undefined,
+        ['Засоби зв’язку (електронна адреса)']: user.email,
+        ['Освіта']: user.education,
+        ['Місце роботи']: user.workplace,
+        ['Найменування займаної посади']: user.jobTitle,
+        ['Результати оцінювання за проходження заходу БПР учасників заходу, які отримали сертифікати']:
+          type === 'TRAINER' ? 'Тренер' : '90%',
+      };
+    });
+
+    return newData.filter((el: any) => !!Object.keys(el).length);
   }
 
   updatePayment(id: number, dto: UpdateRegistrationPaymentDto) {
