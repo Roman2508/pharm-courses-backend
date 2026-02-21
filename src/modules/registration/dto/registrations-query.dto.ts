@@ -1,5 +1,5 @@
 import { Prisma } from 'prisma/generated/browser';
-import { IsString, IsOptional, IsNumber, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsIn } from 'class-validator';
 
 export class RegistrationsQueryDto {
   @IsOptional()

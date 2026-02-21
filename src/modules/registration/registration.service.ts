@@ -18,6 +18,7 @@ import { ExportRegistrationsDto } from './dto/export-registration.dto';
 import { GoogleSheetsService } from '../google-sheets/google-sheets.service';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
 import { generateSertificateNumber } from 'src/shared/helpers/generate-sertificate-number';
+import { RegistrationsUserQueryDto } from './dto/registrations-user-query.dto';
 
 @Injectable()
 export class RegistrationService {
@@ -100,12 +101,28 @@ export class RegistrationService {
     return { data, totalCount };
   }
 
-  findByUserId(userId: string) {
-    return this.prisma.registration.findMany({
-      where: { userId },
-      include: { course: { include: { certificateTemplate: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findByUserId(userId: string, query: RegistrationsUserQueryDto) {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 20);
+
+    let skip = 0;
+
+    if (page && limit) {
+      skip = (page - 1) * limit;
+    }
+
+    const [data, totalCount] = await this.prisma.$transaction([
+      this.prisma.registration.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: (page - 1) * limit,
+        include: { course: { include: { certificateTemplate: true } } },
+      }),
+      this.prisma.registration.count({ where: { userId } }),
+    ]);
+
+    return { data, totalCount };
   }
 
   findMany(dto: ManyRegistrationsDto) {
@@ -144,23 +161,11 @@ export class RegistrationService {
       throw new NotFoundException('Реєстрації не знайдені');
     }
 
-    /* 
-    const results = await this.googleSheetsService.getTestResults()
-    
+    const results = await this.googleSheetsService.getResponses();
+
     const resultsMap = new Map(
-      results.map(r => [r.email.toLowerCase(), r.result])
-    )
-
-    const merged = registrations.map(reg => {
-      const email = reg.user.email.toLowerCase()
-      const testResult = resultsMap.get(email)
-
-      return {
-        ...reg,
-        testResult: testResult || "Не проходив"
-      }
-    })
-    */
+      results.map((r) => [r.email.toLowerCase(), r.result]),
+    );
 
     const newData = registrations.map((reg) => {
       const { course, user, type, id } = reg;
@@ -169,6 +174,9 @@ export class RegistrationService {
 
       const regNumber = generateSertificateNumber(id);
       const sertNumber = `${currentYear}-2044-${course.numberOfInclusionToBpr}-${regNumber}`;
+
+      const email = reg.user.email.toLowerCase();
+      const result = resultsMap.get(email);
 
       return {
         ['Реєстраційний номер Провайдера']: '2044',
@@ -186,7 +194,7 @@ export class RegistrationService {
         ['Місце роботи']: user.workplace,
         ['Найменування займаної посади']: user.jobTitle,
         ['Результати оцінювання за проходження заходу БПР учасників заходу, які отримали сертифікати']:
-          type === 'TRAINER' ? 'Тренер' : '90%',
+          type === 'TRAINER' ? 'Тренер' : result || 'Не проходив',
       };
     });
 

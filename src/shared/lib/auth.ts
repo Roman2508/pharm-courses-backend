@@ -11,6 +11,7 @@ import { getEmailTemplate } from './get-email-template';
 import { admin, multiSession } from 'better-auth/plugins';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '../../../prisma/generated/client';
+import { sendVerificationEmail } from './send-verification-email';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -29,6 +30,72 @@ export const auth = betterAuth({
   emailAndPassword: { enabled: true, requireEmailVerification: true },
 
   emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail({ user, url });
+    },
+  },
+
+  user: {
+    // Перевірити чи правильно так включати зміну емайла
+    changeEmail: {
+      enabled: true,
+    },
+
+    emailVerification: {
+      // Required to send the verification email
+      // sendVerificationEmail: async ({ user, url, token }) => {
+      //   void sendEmail({
+      //     to: user.email,
+      //   });
+      // },
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendVerificationEmail({ user, url });
+      },
+    },
+
+    additionalFields: {
+      birthDate: { type: 'date' },
+      phone: { type: 'string' },
+      region_city: { type: 'string' },
+      education: { type: 'string' },
+      specialty: { type: 'string' },
+      workplace: { type: 'string' },
+      jobTitle: { type: 'string' },
+    },
+
+    deleteUser: {
+      enabled: true,
+    },
+  },
+
+  session: {
+    expiresIn: 60 * 60 * 24 * 14,
+    updateAge: 60 * 60 * 24,
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+    },
+  },
+
+  socialProviders: {},
+
+  secret: process.env.BETTER_AUTH_SECRET!,
+
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    cookiePrefix: 'pharm-courses',
+    generateSessionToken: true,
+    defaultCookieAttributes: {
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      path: '/',
+    },
+  },
+});
+
+/* 
+emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       const origins = (process.env.TRUSTED_ORIGINS || '')
         .split(',')
@@ -65,48 +132,7 @@ export const auth = betterAuth({
       });
     },
   },
-
-  user: {
-    // changeEmail: { Перевірити чи правильно так включати зміну емайла
-    //   enabled: true,
-    // },
-
-    additionalFields: {
-      birthDate: { type: 'date' },
-      phone: { type: 'string' },
-      region_city: { type: 'string' },
-      education: { type: 'string' },
-      specialty: { type: 'string' },
-      workplace: { type: 'string' },
-      jobTitle: { type: 'string' },
-    },
-  },
-
-  session: {
-    expiresIn: 60 * 60 * 24 * 14,
-    updateAge: 60 * 60 * 24,
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
-    },
-  },
-
-  socialProviders: {},
-
-  secret: process.env.BETTER_AUTH_SECRET!,
-
-  advanced: {
-    useSecureCookies: process.env.NODE_ENV === 'production',
-    cookiePrefix: 'pharm-courses',
-    generateSessionToken: true,
-    defaultCookieAttributes: {
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      path: '/',
-    },
-  },
-});
+*/
 
 // import { Resend } from 'resend';
 

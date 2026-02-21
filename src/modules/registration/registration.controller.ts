@@ -21,9 +21,10 @@ import { ManyRegistrationsDto } from './dto/many-registrations.dto';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
+import { ExportRegistrationsDto } from './dto/export-registration.dto';
 import { CurrentUser } from 'src/shared/decorators/current-user.decorator';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
-import { ExportRegistrationsDto } from './dto/export-registration.dto';
+import { RegistrationsUserQueryDto } from './dto/registrations-user-query.dto';
 
 @Controller('registration')
 export class RegistrationController {
@@ -46,8 +47,11 @@ export class RegistrationController {
   }
 
   @Get('/user')
-  findByUserId(@CurrentUser() user: User) {
-    return this.registrationService.findByUserId(user.id);
+  findByUserId(
+    @CurrentUser() user: User,
+    @Query() query: RegistrationsUserQueryDto,
+  ) {
+    return this.registrationService.findByUserId(user.id, query);
   }
 
   @Post('/many')
@@ -78,7 +82,7 @@ export class RegistrationController {
   }
 
   @Roles('admin')
-  @Patch('/export-registrations')
+  @Post('/export-registrations')
   exportRegistration(@Body() dto: ExportRegistrationsDto) {
     return this.registrationService.exportRegistration(dto);
   }
