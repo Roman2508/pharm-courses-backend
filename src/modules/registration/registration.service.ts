@@ -17,14 +17,15 @@ import { RegistrationsQueryDto } from './dto/registrations-query.dto';
 import { ExportRegistrationsDto } from './dto/export-registration.dto';
 import { GoogleSheetsService } from '../google-sheets/google-sheets.service';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
-import { generateSertificateNumber } from 'src/shared/helpers/generate-sertificate-number';
 import { RegistrationsUserQueryDto } from './dto/registrations-user-query.dto';
+import { CertificateNumberService } from '../certificate-number/certificate-number.service';
 
 @Injectable()
 export class RegistrationService {
   constructor(
-    private readonly googleSheetsService: GoogleSheetsService,
     private readonly prisma: PrismaService,
+    private readonly googleSheetsService: GoogleSheetsService,
+    private readonly certificateNumberService: CertificateNumberService,
   ) {}
 
   async create(dto: CreateRegistrationDto) {
@@ -144,11 +145,55 @@ export class RegistrationService {
     });
   }
 
-  updateEnabled(dto: ChangeEnableCertificateDto) {
-    return this.prisma.registration.updateMany({
-      where: { id: { in: dto.ids } },
-      data: { certificateEnabled: dto.certificateEnabled },
-    });
+  async updateEnabled(dto: ChangeEnableCertificateDto) {
+    const MAX_RETRIES = 3;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            await tx.registration.updateMany({
+              where: { id: { in: dto.ids } },
+              data: { certificateEnabled: dto.certificateEnabled },
+            });
+
+            for (const registrationId of dto.ids) {
+              if (dto.certificateEnabled) {
+                const existing = await tx.certificateNumber.findFirst({
+                  where: { registrationId, status: 'ASSIGNED' },
+                });
+                if (!existing) {
+                  await this.certificateNumberService.issue(tx, registrationId);
+                }
+              } else {
+                const cert = await tx.certificateNumber.findFirst({
+                  where: { registrationId, status: 'ASSIGNED' },
+                });
+                if (cert) {
+                  await this.certificateNumberService.release(
+                    tx,
+                    registrationId,
+                  );
+                }
+              }
+            }
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            timeout: 30000,
+          },
+        );
+      } catch (error) {
+        const isSerializationError = error?.code === '40001';
+
+        if (isSerializationError && attempt < MAX_RETRIES) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 100));
+          continue;
+        }
+
+        throw error;
+      }
+    }
   }
 
   async exportRegistration(dto: ExportRegistrationsDto) {
@@ -161,8 +206,14 @@ export class RegistrationService {
       throw new NotFoundException('Реєстрації не знайдені');
     }
 
-    const results = await this.googleSheetsService.getResponses();
+    const certificates = await this.prisma.certificateNumber.findMany({
+      where: { registrationId: { in: dto.ids }, status: 'ASSIGNED' },
+    });
+    const certMap = new Map(
+      certificates.map((c) => [c.registrationId, c.certificateNumber]),
+    );
 
+    const results = await this.googleSheetsService.getResponses();
     const resultsMap = new Map(
       results.map((r) => [r.email.toLowerCase(), r.result]),
     );
@@ -170,10 +221,7 @@ export class RegistrationService {
     const newData = registrations.map((reg) => {
       const { course, user, type, id } = reg;
 
-      const currentYear = new Date().getFullYear();
-
-      const regNumber = generateSertificateNumber(id);
-      const sertNumber = `${currentYear}-2044-${course.numberOfInclusionToBpr}-${regNumber}`;
+      const certificateNumber = certMap.get(id);
 
       const email = reg.user.email.toLowerCase();
       const result = resultsMap.get(email);
@@ -181,7 +229,7 @@ export class RegistrationService {
       return {
         ['Реєстраційний номер Провайдера']: '2044',
         ['Реєстраційний номер заходу']: course.numberOfInclusionToBpr,
-        ['Номер сертифіката']: sertNumber,
+        ['Номер сертифіката']: certificateNumber,
         ["Прізвище, власне ім'я, по батькові (за наявності) учасника"]:
           user.name,
         ['Бали БПР']:

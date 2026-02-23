@@ -32,6 +32,11 @@ enum CourseRegistrationStatus {
   CLOSE
 }
 
+enum CertificateStatus {
+  ASSIGNED 
+  RELEASED 
+}
+
 enum CourseTargetAudience {
   PHARMACISTS
   LABORATORY_ASSISTANTS
@@ -63,6 +68,9 @@ model Course {
 
   registrations Registration[]
 
+  certificateNumbers CertificateNumber[]
+  certCounter        Int                 @default(0) @map("cert_counter")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -84,6 +92,8 @@ model Registration {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
+
+  certificateNumbers CertificateNumber[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -116,6 +126,28 @@ model CertificateTemplate {
   updatedAt DateTime @updatedAt
 
   @@map("certificate_templates")
+}
+
+model CertificateNumber {
+  id                Int               @id @default(autoincrement())
+
+  course            Course            @relation(fields: [courseId], references: [id])
+  courseId          Int
+
+  registration      Registration      @relation(fields: [registrationId], references: [id])
+  registrationId    Int               
+
+  certificateNumber String            @unique @map("certificate_number")
+  sequentialNumber  Int               @map("sequential_number")
+  status            CertificateStatus @default(ASSIGNED)
+
+  assignedAt        DateTime?         @map("assigned_at")
+  releasedAt        DateTime?         @map("released_at")
+
+  createdAt         DateTime          @default(now()) @map("created_at")
+  
+  @@index([courseId, status, sequentialNumber])
+  @@map("certificate_numbers")
 }
 
 model User {
