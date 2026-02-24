@@ -1,14 +1,5 @@
-import {
-  Get,
-  Post,
-  Param,
-  Delete,
-  HttpCode,
-  HttpStatus,
-  Controller,
-  ParseIntPipe,
-} from '@nestjs/common';
-import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Get, Param, Controller } from '@nestjs/common';
+
 import { CertificateNumberService } from './certificate-number.service';
 
 @Controller('certificate-numbers')
@@ -17,15 +8,8 @@ export class CertificateNumberController {
     private readonly certificateNumberService: CertificateNumberService,
   ) {}
 
-//   @Roles('admin')
-//   @HttpCode(HttpStatus.OK)
-//   async issue(@Param('registrationId', ParseIntPipe) registrationId: number) {
-//     return this.certificateNumberService.issueStandalone(registrationId);
-//   }
-
-//   @Roles('admin')
-//   @HttpCode(HttpStatus.OK)
-//   async release(@Param('registrationId', ParseIntPipe) registrationId: number) {
-//     return this.certificateNumberService.releaseStandalone(registrationId);
-//   }
+  @Get('/:id')
+  async getByRegistrationId(@Param('id') id: string) {
+    return this.certificateNumberService.getByRegistrationId(+id);
+  }
 }

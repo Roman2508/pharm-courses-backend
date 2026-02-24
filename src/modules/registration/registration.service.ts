@@ -213,18 +213,32 @@ export class RegistrationService {
       certificates.map((c) => [c.registrationId, c.certificateNumber]),
     );
 
-    const results = await this.googleSheetsService.getResponses();
-    const resultsMap = new Map(
-      results.map((r) => [r.email.toLowerCase(), r.result]),
+    // Збираємо унікальні googleSheetId з курсів (ігноруємо відсутні)
+    const uniqueSheetIds = [
+      ...new Set(
+        registrations.map((reg) => reg.course.googleSheetId).filter(Boolean),
+      ),
+    ];
+
+    // Для кожного sheetId робимо запит і будуємо спільну resultsMap
+    const resultsMap = new Map<string, string>();
+    await Promise.all(
+      uniqueSheetIds.map(async (sheetId) => {
+        if (!sheetId) return;
+        const results = await this.googleSheetsService.getResponses(sheetId);
+        results?.forEach((r) => {
+          resultsMap.set(r.email.toLowerCase().trim(), r.result);
+        });
+      }),
     );
 
     const newData = registrations.map((reg) => {
       const { course, user, type, id } = reg;
 
-      const certificateNumber = certMap.get(id);
+      const certificateNumber = certMap.get(id) ?? '';
 
-      const email = reg.user.email.toLowerCase();
-      const result = resultsMap.get(email);
+      const email = user.email.toLowerCase().trim();
+      const result = course.googleSheetId ? resultsMap.get(email) ?? '' : '';
 
       return {
         ['Реєстраційний номер Провайдера']: '2044',
@@ -236,13 +250,13 @@ export class RegistrationService {
           type === 'TRAINER' ? course.pointsBpr * 2 : course.pointsBpr,
         ['Дата народження']: user.birthDate
           ? new Date(user.birthDate).toLocaleDateString('uk-UA')
-          : undefined,
-        ['Засоби зв’язку (електронна адреса)']: user.email,
+          : '',
+        ["Засоби зв'язку (електронна адреса)"]: user.email,
         ['Освіта']: user.education,
         ['Місце роботи']: user.workplace,
         ['Найменування займаної посади']: user.jobTitle,
         ['Результати оцінювання за проходження заходу БПР учасників заходу, які отримали сертифікати']:
-          type === 'TRAINER' ? 'Тренер' : result || 'Не проходив',
+          type === 'TRAINER' ? 'Тренер' : result,
       };
     });
 

@@ -15,10 +15,16 @@ export class GoogleSheetsService implements OnModuleInit {
     this.sheets = google.sheets({ version: 'v4', auth });
   }
 
-  async getResponses() {
+  async getResponses(spreadsheetId: string) {
+    const spreadsheet = await this.sheets.spreadsheets.get({ spreadsheetId });
+
+    const firstSheetTitle =
+      spreadsheet.data.sheets?.[0].properties?.title ?? 'Sheet1';
+
+    const range = `'${firstSheetTitle}'!A1:Z1000`;
     const response = await this.sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: process.env.GOOGLE_SHEET_RANGE,
+      spreadsheetId,
+      range,
     });
 
     const [headers, ...rows] = response.data.values ?? [];

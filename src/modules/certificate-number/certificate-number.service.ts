@@ -16,6 +16,13 @@ const BPR_PROVIDER_ID = '2044';
 @Injectable()
 export class CertificateNumberService {
   constructor(private readonly prisma: PrismaService) {}
+
+  getByRegistrationId(registrationId: number) {
+    return this.prisma.certificateNumber.findFirst({
+      where: { registrationId, status: CertificateStatus.ASSIGNED },
+    });
+  }
+
   // Основний метод — приймає tx ззовні, без власної транзакції.
   // Викликається з updateEnabled в RegistrationsService в рамках його транзакції.
   async issue(tx: TransactionClient, registrationId: number) {

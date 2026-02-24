@@ -52,6 +52,7 @@ model Course {
   startDate        DateTime?
   endDate          DateTime?
   description      String?
+  type             String
   status           CourseStatus              @default(DRAFT)
   registrationOpen CourseRegistrationStatus  @default(OPEN)
   targetAudience   CourseTargetAudience      @default(PHARMACISTS)
@@ -62,6 +63,7 @@ model Course {
   pointsBpr              Int
   yearOfInclusionToBpr   Int
   numberOfInclusionToBpr Int
+  googleSheetId          String?
 
   certificateTemplate   CertificateTemplate? @relation(fields: [certificateTemplateId], references: [id], onDelete: SetNull)
   certificateTemplateId Int?

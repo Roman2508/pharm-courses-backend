@@ -27,6 +27,7 @@ export class CourseService {
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: (page - 1) * limit,
+        omit: { googleSheetId: true },
       }),
       this.prisma.course.count(),
     ]);
@@ -47,13 +48,15 @@ export class CourseService {
       take: limit,
       skip: (page - 1) * limit,
       orderBy: { createdAt: 'desc' },
+      omit: { googleSheetId: true },
     });
   }
 
-  findOne(id: number) {
+  findOne(id: number, isAdmin = false) {
     return this.prisma.course.findUnique({
       where: { id },
       include: { certificateTemplate: true },
+      omit: { googleSheetId: !isAdmin },
     });
   }
 
@@ -140,11 +143,6 @@ export class CourseService {
       const filePath = `upload/qr-codes/qr-code-${Date.now()}.png`;
       const uploadDir = join(process.cwd(), filePath);
       await writeFile(uploadDir, buffer);
-
-      // const filename = `qr-code-${Date.now()}.png`;
-      // const uploadDir = join(process.cwd(), 'upload', 'qr-codes');
-      // const filePath = join(uploadDir, filename);
-      // await writeFile(filePath, buffer);
 
       return filePath;
     } catch (error) {

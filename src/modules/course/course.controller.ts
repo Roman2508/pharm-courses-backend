@@ -49,9 +49,9 @@ export class CourseController {
   }
 
   @Public()
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.courseService.findOne(+id);
+  @Get('/:admin/:id')
+  findOne(@Param('id') id: string, @Param('admin') admin: string) {
+    return this.courseService.findOne(+id, admin === 'admin');
   }
 
   @Roles('admin')

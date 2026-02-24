@@ -19,7 +19,7 @@ export class CreateCourseDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-
+  
   @ApiProperty()
   @IsString()
   @IsOptional()
@@ -39,11 +39,16 @@ export class CreateCourseDto {
   @IsNumber()
   @IsOptional()
   maxMembers?: number;
+  
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  type: string;
 
   @ApiProperty()
   @IsDateString()
   startDate: Date;
-
+  
   @ApiProperty()
   @IsDateString()
   @IsOptional()
@@ -85,4 +90,8 @@ export class CreateCourseDto {
   @ApiProperty()
   @IsNumber()
   numberOfInclusionToBpr: number;
+
+  @ApiProperty()
+  @IsString()
+  googleSheetId?: string;
 }
