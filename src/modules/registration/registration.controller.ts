@@ -59,6 +59,12 @@ export class RegistrationController {
     return this.registrationService.findMany(dto);
   }
 
+  @Roles('admin')
+  @Get('/:id')
+  findById(@Param('id') id: string) {
+    return this.registrationService.findById(+id);
+  }
+
   @Get('/course/count/:courseId')
   findCountByCourseId(@Param('courseId') courseId: string) {
     return this.registrationService.findCountByCourseId(+courseId);

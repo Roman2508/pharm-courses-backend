@@ -102,6 +102,19 @@ export class RegistrationService {
     return { data, totalCount };
   }
 
+  async findById(id: number) {
+    const registration = await this.prisma.registration.findUnique({
+      where: { id },
+      include: { user: true, course: true },
+    });
+
+    if (!registration) {
+      throw new NotFoundException('Реєстрацію не знайдено');
+    }
+
+    return registration;
+  }
+
   async findByUserId(userId: string, query: RegistrationsUserQueryDto) {
     const page = Number(query.page ?? 1);
     const limit = Number(query.limit ?? 20);
@@ -115,7 +128,7 @@ export class RegistrationService {
     const [data, totalCount] = await this.prisma.$transaction([
       this.prisma.registration.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'asc' },
         take: limit,
         skip: (page - 1) * limit,
         include: { course: { include: { certificateTemplate: true } } },

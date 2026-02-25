@@ -136,7 +136,7 @@ model CertificateNumber {
   course            Course            @relation(fields: [courseId], references: [id])
   courseId          Int
 
-  registration      Registration      @relation(fields: [registrationId], references: [id])
+  registration      Registration      @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   registrationId    Int               
 
   certificateNumber String            @unique @map("certificate_number")
