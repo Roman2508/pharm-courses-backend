@@ -24,7 +24,6 @@ export const sendVerificationEmail = async ({ user, url }) => {
   const message = {
     from: 'support@pharm.zt.ua',
     to: user.email,
-    // to: 'ptashnyk.roman@pharm.zt.ua',
     subject: 'Підтвердження електронної пошти — Курси БПР ЖБФФК',
     html: getEmailTemplate(finalUrl),
   };
