@@ -4,17 +4,19 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import path from 'path';
-import * as fs from 'node:fs/promises';
-
 import { auth } from 'src/shared/lib/auth';
 import { PrismaService } from 'src/core/prisma/prisma.service';
+import { MinioService } from 'src/core/minio/minio.service';
 import { CreateCertificateTemplateDto } from './dto/create-certificate-template.dto';
 import { UpdateCertificateTemplateDto } from './dto/update-certificate-template.dto';
+import { generateFilename } from 'src/shared/lib/generate-filename';
 
 @Injectable()
 export class CertificateTemplateService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly minioService: MinioService,
+  ) {}
 
   async create(body: any, _: Request, file?: Express.Multer.File) {
     const dto: CreateCertificateTemplateDto = {
@@ -38,9 +40,16 @@ export class CertificateTemplateService {
       );
     }
 
-    const templateUrl = file
-      ? `/upload/templates/${file.filename}`
-      : dto.templateUrl;
+    let templateUrl = dto.templateUrl || '';
+    if (file) {
+      const fileName = generateFilename(file.originalname);
+      templateUrl = await this.minioService.uploadFile(
+        'templates',
+        fileName,
+        file.buffer,
+        file.mimetype,
+      );
+    }
 
     return this.prisma.certificateTemplate.create({
       data: { ...dto, templateUrl },
@@ -91,10 +100,6 @@ export class CertificateTemplateService {
         : undefined,
     };
 
-    const templateUrl = file
-      ? `/upload/templates/${file.filename}`
-      : dto.templateUrl;
-
     const registration = await this.prisma.certificateTemplate.findFirst({
       where: { id },
     });
@@ -105,13 +110,18 @@ export class CertificateTemplateService {
 
     const oldTemplateUrl = registration.templateUrl;
 
-    if (templateUrl && oldTemplateUrl !== templateUrl) {
-      try {
-        const oldPath = path.join(process.cwd(), oldTemplateUrl);
-        await fs.unlink(oldPath);
-      } catch (e) {
-        console.log('Old template not found, skip delete');
+    let templateUrl = dto.templateUrl;
+    if (file) {
+      if (oldTemplateUrl) {
+        await this.minioService.deleteFile(oldTemplateUrl);
       }
+      const fileName = generateFilename(file.originalname);
+      templateUrl = await this.minioService.uploadFile(
+        'templates',
+        fileName,
+        file.buffer,
+        file.mimetype,
+      );
     }
 
     const dataToUpdate: any = { ...dto };
@@ -133,6 +143,14 @@ export class CertificateTemplateService {
         'Тільки адміністратор може видалити шаблон сертифіката',
       );
     }
+    const template = await this.prisma.certificateTemplate.findUnique({
+      where: { id },
+    });
+
+    if (template?.templateUrl) {
+      await this.minioService.deleteFile(template.templateUrl);
+    }
+
     await this.prisma.certificateTemplate.delete({ where: { id } });
     return id;
   }

@@ -1,17 +1,17 @@
-import path from 'path';
-import { join } from 'path';
-import * as fs from 'node:fs/promises';
-import { writeFile } from 'fs/promises';
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { CourseQueryDto } from './dto/course-query.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { MinioService } from 'src/core/minio/minio.service';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 
 @Injectable()
 export class CourseService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly minioService: MinioService,
+  ) {}
 
   async create(dto: CreateCourseDto) {
     const paymentQrCode = await this.generateQrCode(dto.price);
@@ -70,12 +70,7 @@ export class CourseService {
     let paymentQrCode = oldCourse.paymentQrCode;
 
     if (paymentQrCode) {
-      try {
-        const oldPath = path.join(process.cwd(), paymentQrCode);
-        await fs.unlink(oldPath);
-      } catch (e) {
-        // console.log('Old QR code not found, skip delete');
-      }
+      await this.minioService.deleteFile(paymentQrCode);
     }
 
     if (dto.price !== undefined) {
@@ -97,12 +92,7 @@ export class CourseService {
     const course = await this.prisma.course.findUnique({ where: { id } });
 
     if (course?.paymentQrCode) {
-      try {
-        const oldPath = path.join(process.cwd(), course.paymentQrCode);
-        await fs.unlink(oldPath);
-      } catch (e) {
-        // console.log('Old QR code not found, skip delete');
-      }
+      await this.minioService.deleteFile(course.paymentQrCode);
     }
 
     await this.prisma.course.delete({ where: { id } });
@@ -139,10 +129,14 @@ export class CourseService {
       }
 
       const buffer = Buffer.from(await response.arrayBuffer());
+      const fileName = `qr-code-${Date.now()}.png`;
 
-      const filePath = `upload/qr-codes/qr-code-${Date.now()}.png`;
-      const uploadDir = join(process.cwd(), filePath);
-      await writeFile(uploadDir, buffer);
+      const filePath = await this.minioService.uploadFile(
+        'qr-codes',
+        fileName,
+        buffer,
+        'image/png',
+      );
 
       return filePath;
     } catch (error) {

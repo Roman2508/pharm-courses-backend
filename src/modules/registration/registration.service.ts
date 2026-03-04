@@ -4,13 +4,12 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import path from 'path';
-import * as fs from 'node:fs/promises';
-
 import { auth } from 'src/shared/lib/auth';
 import { Prisma } from 'prisma/generated/client';
+import { MinioService } from 'src/core/minio/minio.service';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { ManyRegistrationsDto } from './dto/many-registrations.dto';
+import { generateFilename } from 'src/shared/lib/generate-filename';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
@@ -24,6 +23,7 @@ import { CertificateNumberService } from '../certificate-number/certificate-numb
 export class RegistrationService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly minioService: MinioService,
     private readonly googleSheetsService: GoogleSheetsService,
     private readonly certificateNumberService: CertificateNumberService,
   ) {}
@@ -296,10 +296,6 @@ export class RegistrationService {
       );
     }
 
-    const paymentReceiptsUrl = file
-      ? `/upload/payment-receipts/${file.filename}`
-      : '';
-
     const registration = await this.prisma.registration.findFirst({
       where: { id },
     });
@@ -311,12 +307,18 @@ export class RegistrationService {
     const oldImage = registration.paymentReceipt;
 
     if (oldImage) {
-      try {
-        const oldPath = path.join(process.cwd(), oldImage);
-        await fs.unlink(oldPath);
-      } catch (e) {
-        console.log('Old payment receipt not found, skip delete');
-      }
+      await this.minioService.deleteFile(oldImage);
+    }
+
+    let paymentReceiptsUrl = '';
+    if (file) {
+      const fileName = generateFilename(file.originalname);
+      paymentReceiptsUrl = await this.minioService.uploadFile(
+        'payment-receipts',
+        fileName,
+        file.buffer,
+        file.mimetype,
+      );
     }
 
     return this.prisma.registration.update({
@@ -338,10 +340,6 @@ export class RegistrationService {
       );
     }
 
-    const freeParticipationUrl = file
-      ? `/upload/free-participation/${file.filename}`
-      : '';
-
     const registration = await this.prisma.registration.findFirst({
       where: { id },
     });
@@ -353,12 +351,18 @@ export class RegistrationService {
     const oldImage = registration.freeParticipation;
 
     if (oldImage) {
-      try {
-        const oldPath = path.join(process.cwd(), oldImage);
-        await fs.unlink(oldPath);
-      } catch (e) {
-        console.log('Old free participation not found, skip delete');
-      }
+      await this.minioService.deleteFile(oldImage);
+    }
+
+    let freeParticipationUrl = '';
+    if (file) {
+      const fileName = generateFilename(file.originalname);
+      freeParticipationUrl = await this.minioService.uploadFile(
+        'free-participation',
+        fileName,
+        file.buffer,
+        file.mimetype,
+      );
     }
 
     return this.prisma.registration.update({
@@ -388,12 +392,11 @@ export class RegistrationService {
     }
 
     if (existedReg.paymentReceipt) {
-      try {
-        const oldPath = path.join(process.cwd(), existedReg.paymentReceipt);
-        await fs.unlink(oldPath).catch(() => {});
-      } catch (e) {
-        console.log('Old payment receipt not found, skip delete');
-      }
+      await this.minioService.deleteFile(existedReg.paymentReceipt);
+    }
+
+    if (existedReg.freeParticipation) {
+      await this.minioService.deleteFile(existedReg.freeParticipation);
     }
 
     await this.prisma.registration.delete({ where: { id } });
@@ -416,11 +419,13 @@ export class RegistrationService {
     }
 
     await Promise.all(
-      registrations.map((reg) => {
-        if (!reg.paymentReceipt) return;
-
-        const filePath = path.join(process.cwd(), reg.paymentReceipt);
-        return fs.unlink(filePath).catch(() => {});
+      registrations.map(async (reg) => {
+        if (reg.paymentReceipt) {
+          await this.minioService.deleteFile(reg.paymentReceipt);
+        }
+        if (reg.freeParticipation) {
+          await this.minioService.deleteFile(reg.freeParticipation);
+        }
       }),
     );
 

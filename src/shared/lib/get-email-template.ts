@@ -1,4 +1,32 @@
-export const getEmailTemplate = (url: string) => {
+export const getEmailTemplate = (
+  url: string,
+  type: 'verification' | 'change-email' = 'verification',
+) => {
+  const title =
+    type === 'verification'
+      ? 'Вітаємо! Ви зареєструвалися в системі курсів БПР.'
+      : 'Зміна електронної пошти';
+
+  const description1 =
+    type === 'verification'
+      ? 'Ви отримали цей лист, оскільки реєструвалися на платформі курсів безперервного професійного розвитку (БПР) Житомирського базового фармацевтичного фахового коледжу.'
+      : 'Ми отримали запит на зміну адреси електронної пошти у вашому профілі на платформі курсів безперервного професійного розвитку (БПР) Житомирського базового фармацевтичного фахового коледжу.';
+
+  const description2 =
+    type === 'verification'
+      ? 'Щоб завершити реєстрацію та підтвердити свою електронну пошту, будь ласка, перейдіть за посиланням нижче:'
+      : 'Перейдіть за посиланням нижче, щоб підтвердити зміну.';
+
+  const description3 =
+    type === 'verification'
+      ? 'Якщо ви не реєструвалися на нашому сайті, просто проігноруйте цей лист.'
+      : 'Якщо ви не змінювали електронну пошту, просто проігноруйте цей лист.';
+
+  const buttonText =
+    type === 'verification'
+      ? 'Підтвердити електронну пошту'
+      : 'Змінити електронну пошту';
+
   return `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html
@@ -49,31 +77,30 @@ export const getEmailTemplate = (url: string) => {
         "
       >
         <div style="text-align: center">
-          <img src="${process.env.BACKEND_URL}/upload/logo.png" alt="Logo" style="width: 120px; height: auto" />
+          <img src="${process.env.MINIO_ENDPOINT}/bpr/logo.png" alt="Logo" style="width: 120px; height: auto" />
         </div>
 
         <h1 style="font-size: 32px; line-height: 1.2; margin: 30px 0; text-align: center; font-family: 'Fira Sans', BlinkMacSystemFont, Segoe UI, Helvetica Neue">
-          Вітаємо! Ви зареєструвалися в системі курсів БПР.
+          ${title}
         </h1>
 
         <p style="font-family: 'Fira Sans', BlinkMacSystemFont, Segoe UI, Helvetica Neue; margin-bottom: 8px; color: #666666; font-size: 16px; line-height: 1.5em; text-align: justify;">
-          Ви отримали цей лист, оскільки реєструвалися на платформі курсів
-          безперервного професійного розвитку (БПР) Житомирського базового
-          фармацевтичного фахового коледжу.
+          ${description1}
         </p>
         <p style="font-family: 'Fira Sans', BlinkMacSystemFont, Segoe UI, Helvetica Neue; margin-bottom: 8px; color: #666666; font-size: 16px; line-height: 1.5em; text-align: justify;">
-          Щоб завершити реєстрацію та підтвердити свою електронну пошту, будь
-          ласка, перейдіть за посиланням нижче:
+          ${description2}
         </p>
         <p style="font-family: 'Fira Sans', BlinkMacSystemFont, Segoe UI, Helvetica Neue; margin-bottom: 8px; color: #666666; font-size: 16px; line-height: 1.5em; text-align: justify;">
-          Якщо ви не реєструвалися на нашому сайті, просто проігноруйте цей лист.
+          ${description3}
         </p>
         <p style="font-family: 'Fira Sans', BlinkMacSystemFont, Segoe UI, Helvetica Neue; margin-bottom: 8px; color: #666666; font-size: 16px; line-height: 1.5em; text-align: justify;">З повагою</p>
         <p style="font-family: 'Fira Sans', BlinkMacSystemFont, Segoe UI, Helvetica Neue; margin-bottom: 8px; color: #666666; font-size: 16px; line-height: 1.5em; text-align: justify;">Житомирський базовий фармацевтичний фаховий коледж</p>
 
         <div style="text-align: center; margin: 32px 0">
           <a href="${url}">
-            <button style="font-family: 'Fira Sans', BlinkMacSystemFont, Segoe UI, Helvetica Neue; background-color: #0055ff; color: #fff; padding: 16px 32px; border-radius: 10px; font-size: 18px; text-decoration: none; border: 0; cursor: pointer;">Підтвердити електронну пошту</button>
+            <button style="font-family: 'Fira Sans', BlinkMacSystemFont, Segoe UI, Helvetica Neue; background-color: #0055ff; color: #fff; padding: 16px 32px; border-radius: 10px; font-size: 18px; text-decoration: none; border: 0; cursor: pointer;">
+              ${buttonText}
+            </button>
           </a>
         </div>
       </div>

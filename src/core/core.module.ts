@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { CoreService } from './core.service';
 import { CoreController } from './core.controller';
+import { MinioModule } from './minio/minio.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { UserModule } from 'src/modules/users/user.module';
@@ -19,6 +20,7 @@ import { CertificateTemplateModule } from 'src/modules/certificate-template/cert
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     UserModule,
+    MinioModule,
     PrismaModule,
     CourseModule,
     GoogleSheetsModule,

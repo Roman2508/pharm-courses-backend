@@ -2,11 +2,16 @@ import { getEmailTemplate } from './get-email-template';
 
 const nodemailer = require('nodemailer');
 
-export const sendVerificationEmail = async ({ user, url }) => {
+export const sendVerificationEmail = async (
+  { email, url },
+  type: 'verification' | 'change-email' = 'verification',
+) => {
   const origins = (process.env.TRUSTED_ORIGINS || '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+
+  console.log(email, url);
 
   const FRONTEND_URL = origins[0];
   const tokenUrl = new URL(url);
@@ -16,16 +21,23 @@ export const sendVerificationEmail = async ({ user, url }) => {
   let transport = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: true,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
     },
   });
+
+  const emailSubject =
+    type === 'verification'
+      ? 'Підтвердження електронної пошти'
+      : 'Зміна електронної пошти';
+
   const message = {
     from: 'support@pharm.zt.ua',
-    to: user.email,
-    subject: 'Підтвердження електронної пошти — Курси БПР ЖБФФК',
-    html: getEmailTemplate(finalUrl),
+    to: email,
+    subject: `${emailSubject} — БПР ЖБФФК`,
+    html: getEmailTemplate(finalUrl, type),
   };
 
   await transport.sendMail(message, function (err, info) {

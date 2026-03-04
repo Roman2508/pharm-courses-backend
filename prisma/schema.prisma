@@ -223,6 +223,7 @@ model Account {
 model Verification {
   id         String   @id
   identifier String
+  userId     String?
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())

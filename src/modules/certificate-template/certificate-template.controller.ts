@@ -15,6 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Public } from 'src/shared/decorators/public.decorator';
 import { CertificateTemplateService } from './certificate-template.service';
+import { DOCUMENT_UPLOAD_OPTIONS } from 'src/shared/lib/file-upload.utils';
 
 @Controller('certificate-template')
 export class CertificateTemplateController {
@@ -24,7 +25,7 @@ export class CertificateTemplateController {
 
   @Roles('admin')
   @Post()
-  @UseInterceptors(FileInterceptor('templateFile'))
+  @UseInterceptors(FileInterceptor('templateFile', DOCUMENT_UPLOAD_OPTIONS))
   async create(
     @Body() body: any,
     @UploadedFile() file: Express.Multer.File,
@@ -47,7 +48,7 @@ export class CertificateTemplateController {
 
   @Roles('admin')
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('templateFile'))
+  @UseInterceptors(FileInterceptor('templateFile', DOCUMENT_UPLOAD_OPTIONS))
   async update(
     @Param('id') id: string,
     @Body() body: any,

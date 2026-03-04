@@ -16,7 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from 'prisma/generated/client';
 import { RegistrationService } from './registration.service';
 import { Roles } from 'src/shared/decorators/roles.decorator';
-import { multerOptions } from 'src/shared/lib/multer-options';
+import { ANY_FILE_UPLOAD_OPTIONS } from 'src/shared/lib/file-upload.utils';
 import { ManyRegistrationsDto } from './dto/many-registrations.dto';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
@@ -103,12 +103,7 @@ export class RegistrationController {
   }
 
   @Patch('/payment-receipt/:id')
-  @UseInterceptors(
-    FileInterceptor(
-      'paymentReceipt',
-      multerOptions('./upload/payment-receipts'),
-    ),
-  )
+  @UseInterceptors(FileInterceptor('paymentReceipt', ANY_FILE_UPLOAD_OPTIONS))
   async updatePaymentReceipt(
     @Req() req: Request,
     @Param('id') id: string,
@@ -119,10 +114,7 @@ export class RegistrationController {
 
   @Patch('/free-participation/:id')
   @UseInterceptors(
-    FileInterceptor(
-      'freeParticipation',
-      multerOptions('./upload/free-participation'),
-    ),
+    FileInterceptor('freeParticipation', ANY_FILE_UPLOAD_OPTIONS),
   )
   async freeParticipation(
     @Req() req: Request,
