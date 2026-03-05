@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
+import { i18n } from '@better-auth/i18n';
 import { betterAuth } from 'better-auth';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { admin, multiSession } from 'better-auth/plugins';
@@ -24,37 +25,44 @@ export const auth = betterAuth({
   baseURL: process.env.BACKEND_URL || 'http://localhost:7777',
   basePath: '/auth',
   trustedOrigins: [...(process.env.TRUSTED_ORIGINS || '').split(',')],
-  plugins: [admin(), multiSession()],
+  plugins: [
+    admin(),
+    multiSession(),
+    i18n({
+      defaultLocale: 'uk',
+      translations: {
+        uk: {
+          USER_NOT_FOUND: 'Користувача не знайдено',
+          INVALID_EMAIL_OR_PASSWORD: 'Невірна електронна пошта або пароль',
+          INVALID_PASSWORD: 'Невірний пароль',
+          EMAIL_ALREADY_VERIFIED: 'Електронна пошта вже верифікована',
+          EMAIL_NOT_VERIFIED: 'Електронну пошту не підтверджено',
+          CREDENTIAL_ACCOUNT_NOT_FOUND: 'Обліковий запис не знайдено',
+          SESSION_EXPIRED: 'Сеанс закінчився',
+          ACCESS_DENIED: 'Доступ заборонено',
+        },
+      },
+    }),
+  ],
   emailAndPassword: { enabled: true, requireEmailVerification: true },
 
+  // Уніфікована верифікація пошти
   emailVerification: {
+    sendOnSignIn: false,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendVerificationEmail({ email: user.email, url }, 'verification');
+      // Якщо користувач вже верифікований (emailVerified: true), то це зміна пошти.
+      // Якщо ні - це первинна реєстрація.
+      const type = user.emailVerified ? 'change-email' : 'verification';
+
+      console.log(`Sent email type: ${type} to ${user.email}`);
+
+      await sendVerificationEmail({ email: user.email, url }, type);
     },
   },
 
   user: {
-    // Перевірити чи правильно так включати зміну емайла
     changeEmail: {
       enabled: true,
-      sendChangeEmailConfirmation: async (data, request) => {
-        await sendVerificationEmail(
-          { email: data.newEmail, url: data.url },
-          'change-email',
-        );
-      },
-    },
-
-    emailVerification: {
-      // Required to send the verification email
-      // sendVerificationEmail: async ({ user, url, token }) => {
-      //   void sendEmail({
-      //     to: user.email,
-      //   });
-      // },
-      sendVerificationEmail: async ({ user, url }) => {
-        await sendVerificationEmail({ email: user.email, url }, 'verification');
-      },
     },
 
     additionalFields: {

@@ -11,8 +11,6 @@ export const sendVerificationEmail = async (
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-  console.log(email, url);
-
   const FRONTEND_URL = origins[0];
   const tokenUrl = new URL(url);
   tokenUrl.searchParams.set('callbackURL', `${FRONTEND_URL}/auth/verified`);
