@@ -16,12 +16,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from 'prisma/generated/client';
 import { RegistrationService } from './registration.service';
 import { Roles } from 'src/shared/decorators/roles.decorator';
-import { ANY_FILE_UPLOAD_OPTIONS } from 'src/shared/lib/file-upload.utils';
 import { ManyRegistrationsDto } from './dto/many-registrations.dto';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { ChangeEnableCertificateDto } from './dto/update-enabled.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
 import { ExportRegistrationsDto } from './dto/export-registration.dto';
+import { ANY_FILE_UPLOAD_OPTIONS } from 'src/shared/lib/file-upload.utils';
 import { CurrentUser } from 'src/shared/decorators/current-user.decorator';
 import { UpdateRegistrationPaymentDto } from './dto/update-registration.dto';
 import { RegistrationsUserQueryDto } from './dto/registrations-user-query.dto';
@@ -36,8 +36,8 @@ export class RegistrationController {
   }
 
   @Post('/free')
-  createForFree(@Body() dto: CreateRegistrationDto) {
-    return this.registrationService.createForFree(dto);
+  createForFree(@Body() dto: CreateRegistrationDto, @CurrentUser() user: User) {
+    return this.registrationService.createForFree(dto, user?.id);
   }
 
   @Roles('admin')

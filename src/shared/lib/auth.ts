@@ -54,8 +54,6 @@ export const auth = betterAuth({
       // Якщо ні - це первинна реєстрація.
       const type = user.emailVerified ? 'change-email' : 'verification';
 
-      console.log(`Sent email type: ${type} to ${user.email}`);
-
       await sendVerificationEmail({ email: user.email, url }, type);
     },
   },

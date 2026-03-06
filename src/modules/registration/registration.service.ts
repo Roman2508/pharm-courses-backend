@@ -42,7 +42,11 @@ export class RegistrationService {
     return this.prisma.registration.create({ data: dto });
   }
 
-  async createForFree(dto: CreateRegistrationDto) {
+  async createForFree(dto: CreateRegistrationDto, userId?: string) {
+    if (dto.userId !== userId) {
+      throw new UnauthorizedException('Ви можете зареєструвати тільки на себе');
+    }
+
     const existingRegistration = await this.prisma.registration.findUnique({
       where: {
         courseId_userId: { userId: dto.userId, courseId: dto.courseId },
